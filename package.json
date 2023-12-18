@@ -7,7 +7,9 @@
   },
   "dependencies": {
     "@lucia-auth/adapter-prisma": "^3.0.2",
+    "@lucia-auth/oauth": "^3.5.0",
     "@prisma/client": "^5.7.0",
+    "dotenv": "^16.3.1",
     "elysia": "latest",
     "lucia": "^2.7.4"
   },
