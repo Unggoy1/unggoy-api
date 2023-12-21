@@ -57,11 +57,11 @@ export const authApp = new Elysia().derive(
   },
 );
 
-authApp.get("/user", async (context) => {
-  if (!context.user) {
-    return new Response(null, {
-      status: 401,
-    });
-  }
-  return context.user;
-});
+// authApp.get("/user", async (context) => {
+//   if (!context.user) {
+//     return new Response(null, {
+//       status: 401,
+//     });
+//   }
+//   return context.user;
+// });
