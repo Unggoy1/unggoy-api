@@ -1,36 +1,47 @@
-import { lucia } from "lucia";
-import { elysia } from "lucia/middleware";
-import { prisma } from "@lucia-auth/adapter-prisma";
+import { Lucia, TimeSpan } from "lucia";
+import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
 import { PrismaClient } from "@prisma/client";
-import { azureAD, github } from "@lucia-auth/oauth/providers";
+import { MicrosoftEntraId } from "arctic";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const client = new PrismaClient();
-
-export const auth = lucia({
-  env: "DEV", // "PROD" if deployed to HTTPS process.env.NODE_ENV === "development" ? "DEV" : "PROD",
-  middleware: elysia(),
-  adapter: prisma(client),
-
-  sessionCookie: {
-    expires: false,
-  },
-
-  getUserAttributes: (data) => {
+export const client = new PrismaClient();
+const adapter = new PrismaAdapter(client.session, client.user);
+export const lucia = new Lucia(adapter, {
+  getUserAttributes: (attributes) => {
     return {
-      githubUsername: data.username,
+      username: attributes.username,
     };
   },
+  sessionExpiresIn: new TimeSpan(30, "d"), // no more active/idle
+  sessionCookie: {
+    name: "auth_session",
+    expires: false, // session cookies have very long lifespan (2 years)
+    attributes: {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      domain: "localhost",
+    },
+  },
 });
 
-export const azureAuth = azureAD(auth, {
-  clientId: process.env.AZURE_CLIENT_ID ?? "",
-  clientSecret: process.env.Azure_CLIENT_SECRET ?? "",
-  tenant: process.env.AZURE_TENANT ?? "",
-  redirectUri: process.env.AZURE_REDIRECT_URI ?? "",
-  // scope: ["XboxLive.signin"],
-});
-
-export type Auth = typeof auth;
+declare module "lucia" {
+  interface Register {
+    Lucia: typeof lucia;
+  }
+  interface DatabaseSessionAttributes { }
+  interface DatabaseUserAttributes {
+    username: string;
+    oid: string;
+  }
+}
+const cliendId = process.env.AZURE_CLIENT_ID ?? "";
+const clientSecret = process.env.AZURE_CLIENT_SECRET ?? "";
+const redirectURI = process.env.AZURE_REDIRECT_URI ?? "";
+export const entraId = new MicrosoftEntraId(
+  "consumers",
+  cliendId,
+  clientSecret,
+  redirectURI,
+);

@@ -6,12 +6,16 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
-    "@lucia-auth/adapter-prisma": "^3.0.2",
+    "@elysiajs/cookie": "^0.7.0",
+    "@lucia-auth/adapter-prisma": "beta",
     "@lucia-auth/oauth": "^3.5.0",
     "@prisma/client": "^5.7.0",
+    "arctic": "^0.10.0",
     "dotenv": "^16.3.1",
     "elysia": "latest",
-    "lucia": "^2.7.4"
+    "jwt-decode": "^4.0.0",
+    "lucia": "beta",
+    "oslo": "^0.24.0"
   },
   "devDependencies": {
     "bun-types": "latest",

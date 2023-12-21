@@ -1,12 +1,10 @@
-import Elysia from "elysia";
-import { auth } from "../lucia";
-
-export const user = new Elysia().get("/user", async (context) => {
-  const authRequest = auth.handleRequest(context);
-  const session = await authRequest.validate();
-  if (!session) {
-    context.set.status = 401;
-    return;
-  }
-  return session.user;
-});
+// import Elysia from "elysia";
+// import { authApp } from "../middleware";
+// authApp.get("/user", async (context) => {
+//   if (!context.user) {
+//     return new Response(null, {
+//       status: 401,
+//     });
+//   }
+//   return context.user;
+// });

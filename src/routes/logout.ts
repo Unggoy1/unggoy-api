@@ -1,16 +1,17 @@
-import Elysia from "elysia";
-import { auth } from "../lucia";
-
-export const logout = new Elysia().get("/logout", async (context) => {
-  const authRequest = auth.handleRequest(context);
-  const session = await authRequest.validate();
-  if (!session) {
-    context.set.status = 401;
-    return;
-  }
-  await auth.invalidateSession(session.sessionId);
-  authRequest.setSession(null);
-  //redirect back to login page
-  context.set.redirect = "/login";
-  return;
-});
+// import Elysia from "elysia";
+// import { authApp } from "../middleware";
+// import { lucia } from "../lucia";
+//
+// authApp.get("/logout", async (context) => {
+//   if (!context.user) {
+//     return new Response(null, {
+//       status: 401,
+//     });
+//   }
+//   await lucia.invalidateSession(session)
+//   await auth.invalidateSession(session.sessionId);
+//   authRequest.setSession(null);
+//   //redirect back to login page
+//   context.set.redirect = "/login";
+//   return;
+// });
