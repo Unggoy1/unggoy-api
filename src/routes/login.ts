@@ -8,6 +8,7 @@ import {
   OAuth2RequestError,
 } from "arctic";
 import { generateId } from "lucia";
+import { parseJWT } from "oslo/jwt";
 import { jwtDecode } from "jwt-decode";
 import { entraIdTokenPayload } from "../interface";
 
@@ -81,6 +82,8 @@ export const login = new Elysia().group("/login", (app) => {
             await entraId.validateAuthorizationCode(code, codeVerifier);
 
           const user = await jwtDecode<entraIdTokenPayload>(tokens.idToken);
+          const oslouser = await parseJWT(tokens.idToken);
+          console.log(oslouser);
 
           const existingUser = await client.user.findFirst({
             where: {
