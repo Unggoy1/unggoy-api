@@ -1,8 +1,9 @@
 import Elysia from "elysia";
+import { authApp } from "../middleware";
 
-export const maps = new Elysia().get(
-  "/maps/:assetId",
-  async ({ params: { assetId } }) => {
+export const maps = new Elysia()
+  .use(authApp)
+  .get("/maps/:assetId", async ({ params: { assetId } }) => {
     const ugcEndpoint =
       "https://discovery-infiniteugc.svc.halowaypoint.com/hi/maps/ef006625-5780-4d94-abf5-67ec0236a453/" +
       assetId;
@@ -25,5 +26,4 @@ export const maps = new Elysia().get(
       console.error("Error fetching data:", error);
       throw error;
     }
-  },
-);
+  });
