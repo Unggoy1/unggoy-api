@@ -1,6 +1,6 @@
 import { verifyRequestOrigin } from "oslo/request";
 import { lucia } from "./lucia";
-import type { User } from "lucia";
+import type { Session, User } from "lucia";
 import { Elysia } from "elysia";
 
 export const authApp = new Elysia().derive(
@@ -8,6 +8,7 @@ export const authApp = new Elysia().derive(
     context,
   ): Promise<{
     user: User | null;
+    session: Session | null;
   }> => {
     // CSRF check
     if (context.request.method !== "GET") {
@@ -21,18 +22,19 @@ export const authApp = new Elysia().derive(
         console.log("was it me");
         return {
           user: null,
+          session: null,
         };
       }
     }
 
     // use headers instead of Cookie API to prevent type coercion
     const cookieHeader = context.request.headers.get("Cookie") ?? "";
-    console.log(cookieHeader);
     const sessionId = lucia.readSessionCookie(cookieHeader);
     if (!sessionId) {
       console.log("or was it me");
       return {
         user: null,
+        session: null,
       };
     }
 
@@ -45,6 +47,7 @@ export const authApp = new Elysia().derive(
       });
     }
     if (!session) {
+      // await lucia.invalidateSession(sessionId);
       const sessionCookie = lucia.createBlankSessionCookie();
       context.cookie[sessionCookie.name].set({
         value: sessionCookie.value,
@@ -53,15 +56,7 @@ export const authApp = new Elysia().derive(
     }
     return {
       user,
+      session,
     };
   },
 );
-
-// authApp.get("/user", async (context) => {
-//   if (!context.user) {
-//     return new Response(null, {
-//       status: 401,
-//     });
-//   }
-//   return context.user;
-// });

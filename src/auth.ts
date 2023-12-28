@@ -1,7 +1,7 @@
 import { entraId } from "./lucia";
 import { MicrosoftEntraIdTokens } from "arctic";
 
-enum XstsEndpoint {
+enum XstsRelayingParty {
   XboxAudience = "http://xboxlive.com",
   HaloAudience = "https://prod.xsts.halowaypoint.com/",
 }
@@ -10,10 +10,10 @@ type XboxToken = {
   DisplayClaims: {
     xui: {
       uhs: string;
+      xid?: string;
+      gtg?: string;
     }[];
   };
-  Xuid?: string;
-  Gamertag?: string;
   IssueInstant: string;
   NotAfter: string;
   Token: string;
@@ -26,7 +26,16 @@ type SpartanToken = {
   TokenDuration: string;
 };
 
-export async function refreshSpartanToken(refreshToken: string) {
+type Spartan = {
+  xuid: string;
+  gamertag: string;
+  spartanToken: SpartanToken;
+  refreshToken: string;
+};
+
+export async function refreshSpartanToken(
+  refreshToken: string,
+): Promise<Spartan> {
   const oauth_tokens: MicrosoftEntraIdTokens =
     await entraId.refreshAccessToken(refreshToken);
 
@@ -36,13 +45,13 @@ export async function refreshSpartanToken(refreshToken: string) {
   //call to get XSTS Xbox token
   const xstsToken = await requestXstsToken(
     userToken.Token,
-    XstsEndpoint.XboxAudience,
+    XstsRelayingParty.XboxAudience,
   );
 
   //call to get XSTS Halo Token
   const haloXstsToken = await requestXstsToken(
     userToken.Token,
-    XstsEndpoint.HaloAudience,
+    XstsRelayingParty.HaloAudience,
   );
 
   //call to get spartan token
@@ -50,11 +59,12 @@ export async function refreshSpartanToken(refreshToken: string) {
 
   //call to get request clearance token should be optional for our use
   //const clearanceToken = await requestClearanceToken(spartanToken.SpartanToken);
+
   return {
-    xuid: xstsToken.Xuid,
-    gamertag: xstsToken.Gamertag,
+    xuid: xstsToken.DisplayClaims.xui[0].xid!,
+    gamertag: xstsToken.DisplayClaims.xui[0].gtg!,
     spartanToken: spartanToken,
-    refreshToken: oauth_tokens.refreshToken,
+    refreshToken: oauth_tokens.refreshToken!,
     //xbl_authorization_header_value = xstsToken.authorization_header_value
   };
 }
@@ -79,8 +89,10 @@ export async function requestUserToken(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-xbl-contract-version": "1",
         // You can add additional headers here if needed
       },
+      //settings.svc.halowaypoint.com/spartan-token
       body: JSON.stringify(postData),
     });
 
@@ -97,21 +109,23 @@ export async function requestUserToken(
 
 export async function requestXstsToken(
   accessToken: string,
-  xstsEndpoint: XstsEndpoint,
+  xstsRelayingParty: XstsRelayingParty,
 ): Promise<XboxToken> {
+  const apiEndpoint = "https://xsts.auth.xboxlive.com/xsts/authorize";
   const postData = {
     Properties: {
       SandboxId: "RETAIL",
       UserTokens: [accessToken],
     },
-    RelyingParty: xstsEndpoint,
+    RelyingParty: xstsRelayingParty,
     TokenType: "JWT",
   };
   try {
-    const response = await fetch(xstsEndpoint, {
+    const response = await fetch(apiEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-xbl-contract-version": "1",
         // You can add additional headers here if needed
       },
       body: JSON.stringify(postData),
@@ -120,8 +134,7 @@ export async function requestXstsToken(
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
-
-    const data: XboxToken = (await response.json()) as XboxToken;
+    const data: any = await response.json();
     return data;
   } catch (error) {
     throw error;
@@ -131,7 +144,7 @@ export async function requestXstsToken(
 export async function requestSpartanToken(
   accessToken: string,
 ): Promise<SpartanToken> {
-  const apiEndpoint = "https://settings.svc.halowaypoint.com/";
+  const apiEndpoint = "https://settings.svc.halowaypoint.com/spartan-token";
   const postData = {
     Audience: "urn:343:s3:services",
     MinVersion: "4",
@@ -147,6 +160,7 @@ export async function requestSpartanToken(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Accept: "application/json",
         // You can add additional headers here if needed
       },
       body: JSON.stringify(postData),

@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { maps } from "./routes/ugc";
 import { login } from "./routes/login";
 import { user } from "./routes/user";
-// import { logout } from "./routes/logout";
+import { logout } from "./routes/logout";
 import { authApp } from "./middleware";
 
 const app = new Elysia()
@@ -10,7 +10,7 @@ const app = new Elysia()
   .use(maps)
   .use(login)
   .use(user)
-  //.use(logout)
+  .use(logout)
   .listen(3000);
 
 console.log(

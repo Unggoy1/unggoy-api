@@ -11,6 +11,7 @@ import { generateId } from "lucia";
 import { parseJWT } from "oslo/jwt";
 import { jwtDecode } from "jwt-decode";
 import { entraIdTokenPayload } from "../interface";
+import { refreshSpartanToken } from "../auth";
 
 export const login = new Elysia().group("/login", (app) => {
   return app
@@ -33,6 +34,9 @@ export const login = new Elysia().group("/login", (app) => {
         const authorizationUrl = await entraId.createAuthorizationURL(
           state,
           codeVerifier,
+          {
+            scopes: ["Xboxlive.signin", "Xboxlive.offline_access"],
+          },
         );
 
         entra_oauth_state.set({
@@ -80,10 +84,11 @@ export const login = new Elysia().group("/login", (app) => {
         try {
           const tokens: MicrosoftEntraIdTokens =
             await entraId.validateAuthorizationCode(code, codeVerifier);
-
           const user = await jwtDecode<entraIdTokenPayload>(tokens.idToken);
-          const oslouser = await parseJWT(tokens.idToken);
-          console.log(oslouser);
+          const xboxUser = await refreshSpartanToken(tokens.refreshToken!);
+          if (!xboxUser) {
+            throw new Error("Xbox Authentication Error");
+          }
 
           const existingUser = await client.user.findFirst({
             where: {
@@ -92,6 +97,16 @@ export const login = new Elysia().group("/login", (app) => {
           });
 
           if (existingUser) {
+            if (existingUser.username !== xboxUser.gamertag) {
+              await client.user.update({
+                where: {
+                  oid: user.oid,
+                },
+                data: {
+                  username: xboxUser.gamertag,
+                },
+              });
+            }
             const session = await lucia.createSession(existingUser.id, {});
             const sessionCookie = lucia.createSessionCookie(session.id);
             auth_session.set({
@@ -108,8 +123,9 @@ export const login = new Elysia().group("/login", (app) => {
           await client.user.create({
             data: {
               id: userId,
-              username: user.name,
+              username: xboxUser.gamertag,
               oid: user.oid,
+              xuid: xboxUser.xuid,
             },
           });
 

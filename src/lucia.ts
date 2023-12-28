@@ -17,7 +17,7 @@ export const lucia = new Lucia(adapter, {
   sessionExpiresIn: new TimeSpan(30, "d"), // no more active/idle
   sessionCookie: {
     name: "auth_session",
-    expires: false, // session cookies have very long lifespan (2 years)
+    expires: true, // session cookies have very long lifespan (2 years)
     attributes: {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
@@ -34,6 +34,7 @@ declare module "lucia" {
   interface DatabaseUserAttributes {
     username: string;
     oid: string;
+    xuid: string;
   }
 }
 const cliendId = process.env.AZURE_CLIENT_ID ?? "";
