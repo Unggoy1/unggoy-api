@@ -132,6 +132,8 @@ export async function requestXstsToken(
     });
 
     if (!response.ok) {
+      //TODO Figure out if this is because the user doesn't have an xbox account yet to report to front end..
+      console.error(response);
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const data: any = await response.json();

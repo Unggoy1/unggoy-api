@@ -23,11 +23,12 @@ export const login = new Elysia().group("/login", (app) => {
         cookie: { entra_oauth_state, entra_oauth_verifier },
         user,
       }) => {
-        if (user) {
-          set.status = 302;
-          set.redirect = "/";
-          return user;
-        }
+        //TODO Research if this should be removed, or how we handle sessions when you try to relogin when session is active
+        // if (user) {
+        //   set.status = 302;
+        //   set.redirect = "/";
+        //   return user;
+        // }
 
         const state = generateState();
         const codeVerifier = generateCodeVerifier();
@@ -62,7 +63,12 @@ export const login = new Elysia().group("/login", (app) => {
       async ({
         query,
         set,
-        cookie: { auth_session, entra_oauth_state, entra_oauth_verifier },
+        cookie: {
+          auth_session,
+          entra_oauth_state,
+          entra_oauth_verifier,
+          spartan_token,
+        },
       }) => {
         const storedState = entra_oauth_state.value;
         const codeVerifier = entra_oauth_verifier.value;
@@ -89,6 +95,7 @@ export const login = new Elysia().group("/login", (app) => {
           if (!xboxUser) {
             throw new Error("Xbox Authentication Error");
           }
+          console.log(xboxUser.spartanToken);
 
           const existingUser = await client.user.findFirst({
             where: {
@@ -113,6 +120,10 @@ export const login = new Elysia().group("/login", (app) => {
               value: sessionCookie.value,
               ...sessionCookie.attributes,
             });
+            spartan_token.set({
+              value: xboxUser.spartanToken.SpartanToken,
+              ...sessionCookie.attributes,
+            });
             set.status = 302;
             set.redirect = "/";
             return;
@@ -133,6 +144,13 @@ export const login = new Elysia().group("/login", (app) => {
           const sessionCookie = lucia.createSessionCookie(session.id);
           auth_session.set({
             value: sessionCookie.value,
+            ...sessionCookie.attributes,
+          });
+          //TODO Look at the sessionCookie.attrubute
+          //TODO See what attributes should be used for spartan token cookie
+          //TODO See how we can refresh this spartan token as long as our session is active
+          spartan_token.set({
+            value: xboxUser.spartanToken.SpartanToken,
             ...sessionCookie.attributes,
           });
           set.status = 302;

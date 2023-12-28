@@ -19,7 +19,6 @@ export const authApp = new Elysia().derive(
         !hostHeader ||
         !verifyRequestOrigin(originHeader, [hostHeader])
       ) {
-        console.log("was it me");
         return {
           user: null,
           session: null,
@@ -31,7 +30,6 @@ export const authApp = new Elysia().derive(
     const cookieHeader = context.request.headers.get("Cookie") ?? "";
     const sessionId = lucia.readSessionCookie(cookieHeader);
     if (!sessionId) {
-      console.log("or was it me");
       return {
         user: null,
         session: null,
