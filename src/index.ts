@@ -3,9 +3,13 @@ import { maps } from "./routes/ugc";
 import { login } from "./routes/login";
 import { user } from "./routes/user";
 import { logout } from "./routes/logout";
-import { authApp } from "./middleware";
-
+import { cors } from "@elysiajs/cors";
 const app = new Elysia()
+  .use(
+    cors({
+      origin: "localhost:5173", //TODO properly fix this and use ENV or replace this entirely
+    }),
+  )
   .get("/", () => "Hello Elysia")
   .use(maps)
   .use(login)

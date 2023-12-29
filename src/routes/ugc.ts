@@ -38,14 +38,17 @@ export const maps = new Elysia()
     }
   })
   .get("/browse", async ({ query: { assetKind, sort, order, page } }) => {
+    console.log("I was called");
     const ugcEndpoint =
       "https://www.halowaypoint.com/halo-infinite/ugc/browse?";
     const queryParams: UgcFetchData = {
-      assetKind: assetKind ?? undefined,
       sort: sort ?? "datepublishedutc",
       order: order ?? "desc",
       page: page ?? "1",
     };
+    if (assetKind) {
+      queryParams.assetKind = assetKind;
+    }
     try {
       const response = await fetch(
         ugcEndpoint + new URLSearchParams({ ...queryParams }),
@@ -69,6 +72,7 @@ export const maps = new Elysia()
         totalResults: jsonContent.props?.pageProps?.totalResults,
         pageSize: jsonContent.props?.pageProps?.pageSize,
       };
+      console.log(results);
       return results;
     } catch (error) {
       console.error(error);
@@ -89,7 +93,7 @@ export interface UgcData {
   Description: string;
   AssetKind: number; //replace with enumm for map, variant, prefab
   Tags?: string[]; // list of tags, might replace with diff data type
-  Thumbnail: string;
+  ThumbnailUrl: string;
   RefrencedAssets?: string[]; //Seems unused but idk???
   OriginalAuthor: string; // of the form "xuid(123123123123)"
   Likes: number;
