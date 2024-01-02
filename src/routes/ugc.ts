@@ -111,48 +111,54 @@ export const maps = new Elysia().group("/ugc", (app) => {
       }
     })
 
-    .get("/browse", async ({ query: { assetKind, sort, order, page } }) => {
-      const ugcEndpoint =
-        "https://www.halowaypoint.com/halo-infinite/ugc/browse?";
-      const queryParams: UgcFetchData = {
-        sort: sort ?? "datepublishedutc",
-        order: order ?? "desc",
-        page: page ?? "1",
-      };
-      if (assetKind) {
-        queryParams.assetKind = assetKind;
-      }
-      try {
-        const response = await fetch(
-          ugcEndpoint + new URLSearchParams({ ...queryParams }),
-        );
-
-        if (!response.ok) {
-          throw new Error(`failed to fetch data. Status: ${response.status}`);
-        }
-        const htmlContent = await response.text();
-        const $ = load(htmlContent);
-
-        const scriptTag = $("#__NEXT_DATA__");
-
-        if (scriptTag.length === 0) {
-          throw new Error(
-            "No UGC data found try logging in for better results",
-          );
-        }
-        const jsonContent = JSON.parse(scriptTag.html() || "{}");
-        const results = {
-          results: jsonContent.props?.pageProps?.results,
-          totalPages: jsonContent.props?.pageProps?.totalPages,
-          totalResults: jsonContent.props?.pageProps?.totalResults,
-          pageSize: jsonContent.props?.pageProps?.pageSize,
+    .get(
+      "/browse",
+      async ({ query: { assetKind, sort, order, page, searchTerm } }) => {
+        const ugcEndpoint =
+          "https://www.halowaypoint.com/halo-infinite/ugc/browse?";
+        const queryParams: UgcFetchData = {
+          sort: sort ?? "datepublishedutc",
+          order: order ?? "desc",
+          page: page ?? "1",
         };
-        return results;
-      } catch (error) {
-        console.error(error);
-        throw error;
-      }
-    });
+        if (assetKind) {
+          queryParams.assetKind = assetKind;
+        }
+        if (searchTerm) {
+          queryParams.searchTerm = searchTerm;
+        }
+        try {
+          const response = await fetch(
+            ugcEndpoint + new URLSearchParams({ ...queryParams }),
+          );
+
+          if (!response.ok) {
+            throw new Error(`failed to fetch data. Status: ${response.status}`);
+          }
+          const htmlContent = await response.text();
+          const $ = load(htmlContent);
+
+          const scriptTag = $("#__NEXT_DATA__");
+
+          if (scriptTag.length === 0) {
+            throw new Error(
+              "No UGC data found try logging in for better results",
+            );
+          }
+          const jsonContent = JSON.parse(scriptTag.html() || "{}");
+          const results = {
+            results: jsonContent.props?.pageProps?.results,
+            totalPages: jsonContent.props?.pageProps?.totalPages,
+            totalResults: jsonContent.props?.pageProps?.totalResults,
+            pageSize: jsonContent.props?.pageProps?.pageSize,
+          };
+          return results;
+        } catch (error) {
+          console.error(error);
+          throw error;
+        }
+      },
+    );
 });
 
 export interface UgcFetchData {
@@ -160,6 +166,7 @@ export interface UgcFetchData {
   sort?: string; //'datepublishedutc';
   order?: string; //'desc' | 'asc';
   page?: string; //number
+  searchTerm?: string;
 }
 export interface UgcData {
   AssetId: string;
