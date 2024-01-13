@@ -1,8 +1,8 @@
 import { Elysia } from "elysia";
 import { maps } from "./routes/ugc";
-import { login } from "./routes/login";
-import { user } from "./routes/user";
-import { logout } from "./routes/logout";
+// import { login } from "./routes/login";
+// import { user } from "./routes/user";
+// import { logout } from "./routes/logout";
 import { cors } from "@elysiajs/cors";
 const app = new Elysia()
   .use(
@@ -12,9 +12,9 @@ const app = new Elysia()
   )
   .get("/", () => "Hello Elysia")
   .use(maps)
-  .use(login)
-  .use(user)
-  .use(logout)
+  // .use(login)
+  // .use(user)
+  // .use(logout)
   .listen(3000);
 
 console.log(

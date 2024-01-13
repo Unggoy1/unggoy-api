@@ -10,12 +10,20 @@
   "dependencies": {
     "@elysiajs/cookie": "^0.7.0",
     "@elysiajs/cors": "0.7.2",
+    "@lucia-auth/adapter-prisma": "beta",
+    "@lucia-auth/oauth": "^3.5.0",
+    "@prisma/client": "^5.7.0",
+    "arctic": "^0.10.0",
     "cheerio": "^1.0.0-rc.12",
     "dotenv": "^16.3.1",
-    "elysia": "latest"
+    "elysia": "latest",
+    "jwt-decode": "^4.0.0",
+    "lucia": "beta",
+    "oslo": "^0.24.0"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "prisma": "^5.7.0"
   },
   "module": "src/index.js"
 }
