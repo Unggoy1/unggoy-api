@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 const app = new Elysia()
   .use(
     cors({
-      origin: /.*\.unngoy\.xyz$/, //TODO properly fix this and use ENV or replace this entirely
+      origin: "unggoy.xyz", //TODO properly fix this and use ENV or replace this entirely
     }),
   )
   .get("/", () => "Hello Elysia")
