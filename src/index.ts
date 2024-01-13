@@ -7,7 +7,7 @@ import { cors } from "@elysiajs/cors";
 const app = new Elysia()
   .use(
     cors({
-      origin: "localhost:5173", //TODO properly fix this and use ENV or replace this entirely
+      origin: /.*\.unngoy\.xyz$/, //TODO properly fix this and use ENV or replace this entirely
     }),
   )
   .get("/", () => "Hello Elysia")
