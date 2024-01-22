@@ -29,7 +29,13 @@ export const login = new Elysia().group("/login", (app) => {
         //   set.redirect = "/";
         //   return user;
         // }
-
+        // redirect_url.set({
+        //   value: redirectUrl || process.env.URL || "http://localhost:5173",
+        //   httpOnly: true,
+        //   secure: process.env.NODE_ENV === "production",
+        //   path: "/",
+        //   maxAge: 60 * 60,
+        // });
         const state = generateState();
         const codeVerifier = generateCodeVerifier();
         const authorizationUrl = await entraId.createAuthorizationURL(
@@ -67,7 +73,7 @@ export const login = new Elysia().group("/login", (app) => {
           auth_session,
           entra_oauth_state,
           entra_oauth_verifier,
-          spartan_token,
+          redirect_url,
         },
       }) => {
         const storedState = entra_oauth_state.value;
@@ -120,10 +126,19 @@ export const login = new Elysia().group("/login", (app) => {
               value: sessionCookie.value,
               ...sessionCookie.attributes,
             });
-            spartan_token.set({
-              value: xboxUser.spartanToken.SpartanToken,
-              ...sessionCookie.attributes,
+
+            await client.oauth.update({
+              where: {
+                userId: existingUser.id,
+              },
+              data: {
+                spartanToken: xboxUser.spartanToken.SpartanToken,
+                spartanTokenExpiresAt:
+                  xboxUser.spartanToken.ExpiresUtc.ISO8601Date,
+                refreshToken: xboxUser.refreshToken,
+              },
             });
+
             set.status = 302;
             set.redirect = "/";
             return;
@@ -140,6 +155,16 @@ export const login = new Elysia().group("/login", (app) => {
             },
           });
 
+          await client.oauth.create({
+            data: {
+              userId: userId,
+              spartanToken: xboxUser.spartanToken.SpartanToken,
+              spartanTokenExpiresAt:
+                xboxUser.spartanToken.ExpiresUtc.ISO8601Date,
+              refreshToken: xboxUser.refreshToken,
+            },
+          });
+
           const session = await lucia.createSession(userId, {});
           const sessionCookie = lucia.createSessionCookie(session.id);
           auth_session.set({
@@ -149,10 +174,6 @@ export const login = new Elysia().group("/login", (app) => {
           //TODO Look at the sessionCookie.attrubute
           //TODO See what attributes should be used for spartan token cookie
           //TODO See how we can refresh this spartan token as long as our session is active
-          spartan_token.set({
-            value: xboxUser.spartanToken.SpartanToken,
-            ...sessionCookie.attributes,
-          });
           set.status = 302;
           set.redirect = "/";
           return;

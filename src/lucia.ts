@@ -30,7 +30,7 @@ declare module "lucia" {
   interface Register {
     Lucia: typeof lucia;
   }
-  interface DatabaseSessionAttributes { }
+  interface DatabaseSessionAttributes {}
   interface DatabaseUserAttributes {
     username: string;
     oid: string;
