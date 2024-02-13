@@ -12,6 +12,8 @@ const app = new Elysia()
   .use(
     cors({
       origin: process.env.URL || "localhost:5173", //TODO properly fix this and use ENV or replace this entirely
+      allowedHeaders: ["Content-Type", "Authorization"],
+      credentials: true,
     }),
   )
   .get("/", () => "Hello Elysia")

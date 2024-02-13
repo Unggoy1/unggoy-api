@@ -13,10 +13,9 @@ export const maps = new Elysia().group("/ugc", (app) => {
         console.log("we hab user");
         token = await getSpartanToken(user.id);
       }
-      console.log(token);
       const ugcEndpoint = token
         ? "https://discovery-infiniteugc.svc.halowaypoint.com/hi/maps/" +
-          assetId
+        assetId
         : "https://www.halowaypoint.com/halo-infinite/ugc/maps/" + assetId;
       const headers: HeadersInit = {};
       if (token) {
