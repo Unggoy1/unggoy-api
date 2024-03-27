@@ -13,17 +13,17 @@
     "@lucia-auth/adapter-prisma": "beta",
     "@lucia-auth/oauth": "^3.5.0",
     "@prisma/client": "^5.7.0",
+    "prisma": "^5.7.0",
     "arctic": "^0.10.0",
     "cheerio": "^1.0.0-rc.12",
     "dotenv": "^16.3.1",
     "elysia": "latest",
     "jwt-decode": "^4.0.0",
-    "lucia": "beta",
+    "lucia": "latest",
     "oslo": "^0.24.0"
   },
   "devDependencies": {
-    "bun-types": "latest",
-    "prisma": "^5.7.0"
+    "bun-types": "latest"
   },
   "module": "src/index.js"
 }
