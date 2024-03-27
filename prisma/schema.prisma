@@ -16,6 +16,17 @@ model User {
   oid String @unique
   xuid String @unique
   sessions Session[]
+  oauth Oauth?
+}
+
+model Oauth {
+ userId String @id 
+ spartanToken String @db.Text
+ spartanTokenExpiresAt DateTime
+ refreshToken String @db.Text
+ user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Session {
