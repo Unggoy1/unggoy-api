@@ -1,8 +1,8 @@
 import { Elysia } from "elysia";
 import { maps } from "./routes/ugc";
-// import { login } from "./routes/login";
-// import { user } from "./routes/user";
-// import { logout } from "./routes/logout";
+import { login } from "./routes/login";
+import { user } from "./routes/user";
+import { logout } from "./routes/logout";
 import { cors } from "@elysiajs/cors";
 import dotenv from "dotenv";
 
@@ -12,13 +12,15 @@ const app = new Elysia()
   .use(
     cors({
       origin: process.env.URL || "localhost:5173", //TODO properly fix this and use ENV or replace this entirely
+      allowedHeaders: ["Content-Type", "Authorization"],
+      credentials: true,
     }),
   )
   .get("/", () => "Hello Elysia")
   .use(maps)
-  // .use(login)
-  // .use(user)
-  // .use(logout)
+  .use(login)
+  .use(user)
+  .use(logout)
   .listen(PORT);
 
 console.log(
