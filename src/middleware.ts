@@ -4,6 +4,7 @@ import type { Session, User } from "lucia";
 import { Elysia } from "elysia";
 
 export const authApp = new Elysia().derive(
+  { as: "global" },
   async (
     context,
   ): Promise<{
