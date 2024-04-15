@@ -26,10 +26,15 @@ type SpartanToken = {
   TokenDuration: string;
 };
 
+type ClearanceToken = {
+  FlightConfigurationId: string;
+};
+
 type Spartan = {
   xuid: string;
   gamertag: string;
   spartanToken: SpartanToken;
+  clearanceToken: ClearanceToken;
   refreshToken: string;
 };
 
@@ -58,12 +63,13 @@ export async function refreshSpartanToken(
   const spartanToken = await requestSpartanToken(haloXstsToken.Token);
 
   //call to get request clearance token should be optional for our use
-  //const clearanceToken = await requestClearanceToken(spartanToken.SpartanToken);
+  const clearanceToken = await requestClearanceToken(spartanToken.SpartanToken);
 
   return {
     xuid: xstsToken.DisplayClaims.xui[0].xid!,
     gamertag: xstsToken.DisplayClaims.xui[0].gtg!,
     spartanToken: spartanToken,
+    clearanceToken: clearanceToken,
     refreshToken: oauth_tokens.refreshToken!,
     //xbl_authorization_header_value = xstsToken.authorization_header_value
   };
@@ -180,34 +186,25 @@ export async function requestSpartanToken(
 }
 
 export async function requestClearanceToken(
-  accessToken: string,
-): Promise<SpartanToken> {
-  const apiEndpoint = "https://settings.svc.halowaypoint.com/";
-  const postData = {
-    Audience: "urn:343:s3:services",
-    MinVersion: "4",
-    Proof: [
-      {
-        Token: accessToken,
-        TokenType: "Xbox_XSTSv3",
-      },
-    ],
-  };
+  spartanToken: string,
+): Promise<ClearanceToken> {
+  const apiEndpoint =
+    "https://settings.svc.halowaypoint.com/oban/flight-configurations/titles/hi/audiences/RETAIL/active";
   try {
     const response = await fetch(apiEndpoint, {
-      method: "POST",
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "X-343-Authorization-Spartan": spartanToken,
         // You can add additional headers here if needed
       },
-      body: JSON.stringify(postData),
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const data: SpartanToken = (await response.json()) as SpartanToken;
+    const data: ClearanceToken = (await response.json()) as ClearanceToken;
     return data;
   } catch (error) {
     throw error;
