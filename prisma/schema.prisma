@@ -11,29 +11,70 @@ datasource db {
 }
 
 model User {
-  id String @id @unique
-  username String @unique
-  oid String @unique
-  xuid String @unique
+  id       String    @id @unique
+  username String    @unique
+  oid      String    @unique
+  xuid     String    @unique
   sessions Session[]
-  oauth Oauth?
+  oauth    Oauth?
 }
 
 model Oauth {
- userId String @id 
- spartanToken String @db.Text
- spartanTokenExpiresAt DateTime
- refreshToken String @db.Text
- user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+  userId                String   @id
+  spartanToken          String   @db.Text
+  spartanTokenExpiresAt DateTime
+  refreshToken          String   @db.Text
+  clearanceToken        String
+  user                  User     @relation(references: [id], fields: [userId], onDelete: Cascade)
 
   @@index([userId])
 }
 
 model Session {
-  id             String @id @unique
-  userId        String
+  id        String   @id @unique
+  userId    String
   expiresAt DateTime
   user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model Ugc {
+  assetId         String        @id @unique @db.VarChar(36)
+  versionId       String        @unique @db.VarChar(36)
+  version         Int
+  name            String        @db.VarChar(255)
+  description     String        @db.VarChar(256)
+  assetKind       Int           @db.UnsignedTinyInt
+  thumbnailUrl    String        @db.VarChar(255)
+  favorites       Int           @db.UnsignedInt
+  likes           Int           @db.UnsignedInt
+  bookmarks       Int           @db.UnsignedInt
+  playsRecent     Int           @db.UnsignedInt
+  playsAllTime    Int           @db.UnsignedInt
+  averageRating   Int           @db.UnsignedTinyInt
+  numberOfRatings Int           @db.UnsignedInt
+  createdAt       DateTime
+  updatedAt       DateTime
+  publishedAt     DateTime
+  hasNodeGraph    Boolean
+  readOnlyClones  Boolean
+  numberOfObjects Int?          @db.UnsignedInt
+  files           Json
+  contributors    Contributor[]
+  authorId        String
+  tag             Tag[]
+}
+
+model Contributor {
+  xuid       String @id
+  gamertag   String
+  serviceTag String @db.VarChar(4)
+  ugc        Ugc[]
+}
+
+model Tag {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+  ugc  Ugc[]
 }
