@@ -102,6 +102,7 @@ export const login = new Elysia().group("/login", (app) => {
             throw new Error("Xbox Authentication Error");
           }
           console.log(xboxUser.spartanToken);
+          console.log(xboxUser.clearanceToken);
 
           const existingUser = await client.user.findFirst({
             where: {
@@ -136,6 +137,7 @@ export const login = new Elysia().group("/login", (app) => {
                 spartanTokenExpiresAt:
                   xboxUser.spartanToken.ExpiresUtc.ISO8601Date,
                 refreshToken: xboxUser.refreshToken,
+                clearanceToken: xboxUser.clearanceToken,
               },
             });
 
@@ -162,6 +164,7 @@ export const login = new Elysia().group("/login", (app) => {
               spartanTokenExpiresAt:
                 xboxUser.spartanToken.ExpiresUtc.ISO8601Date,
               refreshToken: xboxUser.refreshToken,
+              clearanceToken: xboxUser.clearanceToken,
             },
           });
 

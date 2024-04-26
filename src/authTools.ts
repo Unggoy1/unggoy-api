@@ -1,7 +1,7 @@
 import { client } from "./lucia";
 import { refreshSpartanToken } from "./auth";
 
-export async function getSpartanToken(userId) {
+export async function getSpartanToken(userId: string) {
   let oauth = await client.oauth.findFirst({
     where: {
       userId: userId,
@@ -29,6 +29,7 @@ export async function getSpartanToken(userId) {
           spartanToken: tokens.spartanToken.SpartanToken,
           spartanTokenExpiresAt: tokens.spartanToken.ExpiresUtc.ISO8601Date,
           refreshToken: tokens.refreshToken,
+          clearanceToken: tokens.clearanceToken,
         },
       });
     } catch (error) {
@@ -38,5 +39,8 @@ export async function getSpartanToken(userId) {
     }
   }
 
-  return oauth.spartanToken;
+  return {
+    spartanToken: oauth.spartanToken,
+    clearanceToken: oauth.clearanceToken,
+  };
 }

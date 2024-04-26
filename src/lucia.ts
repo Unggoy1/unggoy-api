@@ -12,6 +12,7 @@ export const lucia = new Lucia(adapter, {
   getUserAttributes: (attributes) => {
     return {
       username: attributes.username,
+      xuid: attributes.xuid,
     };
   },
   sessionExpiresIn: new TimeSpan(30, "d"), // no more active/idle
@@ -29,8 +30,10 @@ export const lucia = new Lucia(adapter, {
 declare module "lucia" {
   interface Register {
     Lucia: typeof lucia;
+    DatabaseSessionAttributes: DatabaseSessionAttributes;
+    DatabaseUserAttributes: DatabaseUserAttributes;
   }
-  interface DatabaseSessionAttributes {}
+  interface DatabaseSessionAttributes { }
   interface DatabaseUserAttributes {
     username: string;
     oid: string;
