@@ -34,7 +34,7 @@ type Spartan = {
   xuid: string;
   gamertag: string;
   spartanToken: SpartanToken;
-  clearanceToken: ClearanceToken;
+  clearanceToken: string;
   refreshToken: string;
 };
 
@@ -69,7 +69,7 @@ export async function refreshSpartanToken(
     xuid: xstsToken.DisplayClaims.xui[0].xid!,
     gamertag: xstsToken.DisplayClaims.xui[0].gtg!,
     spartanToken: spartanToken,
-    clearanceToken: clearanceToken,
+    clearanceToken: clearanceToken.FlightConfigurationId,
     refreshToken: oauth_tokens.refreshToken!,
     //xbl_authorization_header_value = xstsToken.authorization_header_value
   };

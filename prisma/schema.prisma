@@ -78,3 +78,15 @@ model Tag {
   name String @unique
   ugc  Ugc[]
 }
+
+model WaypointSync {
+  id        Int      @id @default(autoincrement())
+  syncedAt  DateTime
+  assetKind SyncType @unique
+}
+
+enum SyncType {
+  Map
+  Prefab
+  UgcGameVariant
+}
