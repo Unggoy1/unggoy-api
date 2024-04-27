@@ -2,12 +2,12 @@ import { Elysia, t } from "elysia";
 import { authApp } from "../middleware";
 import { load } from "cheerio";
 import { getSpartanToken } from "../authTools";
-import { client } from "../lucia";
+import { prisma } from "../prisma";
 
 export const maps = new Elysia().group("/ugc", (app) => {
   return app
     .get("/asset/:assetId", async ({ params: { assetId } }) => {
-      const asset = await client.ugc.findUniqueOrThrow({
+      const asset = await prisma.ugc.findUniqueOrThrow({
         where: { assetId },
         include: {
           tag: {
@@ -45,27 +45,44 @@ export const maps = new Elysia().group("/ugc", (app) => {
           searchTerm,
         },
       }) => {
-        const assets = await client.ugc.findMany({
-          where: {
-            name: {
-              contains: searchTerm,
+        const whereOptions: any = {};
+
+        if (searchTerm) {
+          whereOptions.name = {
+            contains: searchTerm,
+          };
+        }
+        if (assetKind) {
+          whereOptions.assetKind = assetKind;
+        }
+        if (tags && tags.length) {
+          whereOptions.tag = {
+            some: {
+              name: {
+                in: tags,
+              },
             },
-            assetKind: assetKind,
-          },
+          };
+        }
+
+        const [data, totalCount] = await prisma.ugc.findManyAndCount({
+          where: whereOptions,
+
           include: {
             tag: {
               select: {
                 name: true,
               },
-              where: {
-                name: {
-                  in: tags,
-                },
-              },
             },
             contributors: true,
           },
-
+          omit: {
+            versionId: true,
+            files: true,
+            numberOfObjects: true,
+            createdAt: true,
+            updatedAt: true,
+          },
           orderBy: {
             [sort]: order,
           },
@@ -73,7 +90,15 @@ export const maps = new Elysia().group("/ugc", (app) => {
           skip: offset,
         });
 
-        return assets;
+        const assets = data.map((asset) => {
+          return {
+            ...asset,
+            tags: asset.tag.map((t) => t.name),
+            tag: undefined,
+          };
+        });
+
+        return { totalCount: totalCount, pageSize: count, assets: assets };
 
         // const results = {
         //   results: jsonContent.props?.pageProps?.results,

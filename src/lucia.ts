@@ -1,13 +1,12 @@
 import { Lucia, TimeSpan } from "lucia";
 import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
-import { PrismaClient } from "@prisma/client";
 import { MicrosoftEntraId } from "arctic";
 import dotenv from "dotenv";
+import { prisma } from "./prisma";
 
 dotenv.config();
 
-export const client = new PrismaClient();
-const adapter = new PrismaAdapter(client.session, client.user);
+const adapter = new PrismaAdapter(prisma.session, prisma.user);
 export const lucia = new Lucia(adapter, {
   getUserAttributes: (attributes) => {
     return {
@@ -33,7 +32,7 @@ declare module "lucia" {
     DatabaseSessionAttributes: DatabaseSessionAttributes;
     DatabaseUserAttributes: DatabaseUserAttributes;
   }
-  interface DatabaseSessionAttributes { }
+  interface DatabaseSessionAttributes {}
   interface DatabaseUserAttributes {
     username: string;
     oid: string;
