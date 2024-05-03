@@ -43,6 +43,7 @@ export const maps = new Elysia().group("/ugc", (app) => {
           offset = 0,
           tags,
           searchTerm,
+          gamertag,
         },
       }) => {
         const whereOptions: any = {};
@@ -129,6 +130,7 @@ export const maps = new Elysia().group("/ugc", (app) => {
               maxItems: 10,
             }),
             searchTerm: t.String(),
+            gamertag: t.String(),
           }),
         ),
       },
