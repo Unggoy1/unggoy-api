@@ -2,8 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["omitApi"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -68,9 +67,10 @@ model Ugc {
 }
 
 model Contributor {
-  xuid       String @id
+  xuid       String  @id
   gamertag   String
-  serviceTag String @db.VarChar(4)
+  serviceTag String  @db.VarChar(4)
+  emblemPath String?
   ugc        Ugc[]
 }
 

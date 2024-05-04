@@ -27,7 +27,7 @@ CREATE TABLE `Ugc` (
     UNIQUE INDEX `Ugc_assetId_key`(`assetId`),
     UNIQUE INDEX `Ugc_versionId_key`(`versionId`),
     PRIMARY KEY (`assetId`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_ci;
 
 -- CreateTable
 CREATE TABLE `Contributor` (
@@ -40,7 +40,7 @@ CREATE TABLE `Contributor` (
     UNIQUE INDEX `Contributor_gamertag_key`(`gamertag`),
     UNIQUE INDEX `Contributor_emblemId_key`(`emblemId`),
     PRIMARY KEY (`xuid`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_ci;
 
 -- CreateTable
 CREATE TABLE `_ContributorToUgc` (
@@ -49,7 +49,7 @@ CREATE TABLE `_ContributorToUgc` (
 
     UNIQUE INDEX `_ContributorToUgc_AB_unique`(`A`, `B`),
     INDEX `_ContributorToUgc_B_index`(`B`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_ci;
 
 -- AddForeignKey
 ALTER TABLE `_ContributorToUgc` ADD CONSTRAINT `_ContributorToUgc_A_fkey` FOREIGN KEY (`A`) REFERENCES `Contributor`(`xuid`) ON DELETE CASCADE ON UPDATE CASCADE;
