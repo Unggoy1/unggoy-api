@@ -8,7 +8,7 @@ CREATE TABLE `Oauth` (
 
     INDEX `Oauth_userId_idx`(`userId`),
     PRIMARY KEY (`userId`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_ci;
 
 -- AddForeignKey
 ALTER TABLE `Oauth` ADD CONSTRAINT `Oauth_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
