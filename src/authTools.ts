@@ -1,8 +1,8 @@
-import { client } from "./lucia";
+import { prisma } from "./prisma";
 import { refreshSpartanToken } from "./auth";
 
 export async function getSpartanToken(userId: string) {
-  let oauth = await client.oauth.findFirst({
+  let oauth = await prisma.oauth.findFirst({
     where: {
       userId: userId,
     },
@@ -21,7 +21,7 @@ export async function getSpartanToken(userId: string) {
     try {
       const tokens = await refreshSpartanToken(oauth.refreshToken);
 
-      oauth = await client.oauth.update({
+      oauth = await prisma.oauth.update({
         where: {
           userId: userId,
         },

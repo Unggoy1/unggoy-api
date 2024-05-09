@@ -1,5 +1,6 @@
 import Elysia from "elysia";
-import { lucia, entraId, client } from "../lucia";
+import { lucia, entraId } from "../lucia";
+import { prisma } from "../prisma";
 import { authApp } from "../middleware";
 import {
   generateState,
@@ -104,7 +105,7 @@ export const login = new Elysia().group("/login", (app) => {
           console.log(xboxUser.spartanToken);
           console.log(xboxUser.clearanceToken);
 
-          const existingUser = await client.user.findFirst({
+          const existingUser = await prisma.user.findFirst({
             where: {
               oid: user.oid,
             },
@@ -112,7 +113,7 @@ export const login = new Elysia().group("/login", (app) => {
 
           if (existingUser) {
             if (existingUser.username !== xboxUser.gamertag) {
-              await client.user.update({
+              await prisma.user.update({
                 where: {
                   oid: user.oid,
                 },
@@ -128,7 +129,7 @@ export const login = new Elysia().group("/login", (app) => {
               ...sessionCookie.attributes,
             });
 
-            await client.oauth.update({
+            await prisma.oauth.update({
               where: {
                 userId: existingUser.id,
               },
@@ -148,7 +149,7 @@ export const login = new Elysia().group("/login", (app) => {
 
           const userId = generateId(15);
 
-          await client.user.create({
+          await prisma.user.create({
             data: {
               id: userId,
               username: xboxUser.gamertag,
@@ -157,7 +158,7 @@ export const login = new Elysia().group("/login", (app) => {
             },
           });
 
-          await client.oauth.create({
+          await prisma.oauth.create({
             data: {
               userId: userId,
               spartanToken: xboxUser.spartanToken.SpartanToken,
