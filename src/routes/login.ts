@@ -1,4 +1,4 @@
-import Elysia from "elysia";
+import { Elysia, t } from "elysia";
 import { lucia, entraId } from "../lucia";
 import { prisma } from "../prisma";
 import { authApp } from "../middleware";
@@ -20,8 +20,9 @@ export const login = new Elysia().group("/login", (app) => {
     .get(
       "/azure",
       async ({
+        query: { redirectUrl },
         set,
-        cookie: { entra_oauth_state, entra_oauth_verifier },
+        cookie: { entra_oauth_state, entra_oauth_verifier, redirect_url },
         user,
       }) => {
         //TODO Research if this should be removed, or how we handle sessions when you try to relogin when session is active
@@ -46,6 +47,7 @@ export const login = new Elysia().group("/login", (app) => {
             scopes: ["Xboxlive.signin", "Xboxlive.offline_access"],
           },
         );
+        console.log("auth url ", authorizationUrl.toString());
 
         entra_oauth_state.set({
           value: state,
@@ -61,8 +63,20 @@ export const login = new Elysia().group("/login", (app) => {
           path: "/",
           maxAge: 60 * 60,
         });
+        redirect_url.set({
+          value: redirectUrl,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          path: "/",
+          maxAge: 60 * 60,
+        });
         set.status = 302;
         set.redirect = authorizationUrl.toString();
+      },
+      {
+        query: t.Object({
+          redirectUrl: t.String(),
+        }),
       },
     )
     .get(
@@ -81,6 +95,7 @@ export const login = new Elysia().group("/login", (app) => {
         const codeVerifier = entra_oauth_verifier.value;
         const state = query.state;
         const code = query.code;
+        console.log("redirect_url ", redirect_url.value);
 
         //validatestate
         if (
@@ -143,7 +158,7 @@ export const login = new Elysia().group("/login", (app) => {
             });
 
             set.status = 302;
-            set.redirect = "/";
+            set.redirect = redirect_url.value;
             return;
           }
 
@@ -179,7 +194,7 @@ export const login = new Elysia().group("/login", (app) => {
           //TODO See what attributes should be used for spartan token cookie
           //TODO See how we can refresh this spartan token as long as our session is active
           set.status = 302;
-          set.redirect = "/";
+          set.redirect = redirect_url.value;
           return;
         } catch (error) {
           console.error(error);
