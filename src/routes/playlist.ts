@@ -3,27 +3,159 @@ import { authApp } from "../middleware";
 import { load } from "cheerio";
 import { getSpartanToken } from "../authTools";
 import { prisma } from "../prisma";
+import { Prisma } from "@prisma/client";
 
 export const playlists = new Elysia().group("/playlist", (app) => {
   return app
+    .use(authApp)
     .post(
       "/",
-      async ({ params: { name, description, isPrivate, thumbnail } }) => {
-        return;
+      async ({
+        user,
+        session,
+        params: { name, description, isPrivate, thumbnail },
+      }) => {
+        if (!user || !session) {
+          return new Response(null, {
+            status: 401,
+          });
+        }
+        let playlist = await prisma.playlist.findFirst({
+          where: {
+            userId: user.id,
+            name: name,
+          },
+        });
+        if (playlist) {
+          return new Response(null, {
+            status: 409,
+          });
+        }
+
+        playlist = await prisma.playlist.create({
+          data: {
+            name: name,
+            description: description,
+            private: isPrivate,
+            thumbnail: thumbnail,
+            userId: user.id,
+          },
+        });
+
+        return playlist;
       },
     )
-    .get("/:playlistId", async ({ params: { playlistId } }) => {
-      return;
+    .get("/:playlistId", async ({ user, session, params: { playlistId } }) => {
+      // if (!user || !session) {
+      //   return new Response(null, {
+      //     status: 401,
+      //   });
+      // }
+      let playlist = await prisma.playlist.findUnique({
+        where: {
+          id: playlistId,
+        },
+      });
+      if (!playlist) {
+        return new Response(null, {
+          status: 404,
+        });
+      }
+
+      if (playlist.private && (!user || playlist.userId !== user.id)) {
+        return new Response(null, {
+          status: 403,
+        });
+      }
+
+      return playlist;
     })
     .put(
       "/",
-      async ({ params: { name, description, isPrivate, thumbnail } }) => {
+      async ({
+        user,
+        session,
+        params: { playlistId, name, description, isPrivate, thumbnail },
+      }) => {
+        if (!user || !session) {
+          return new Response(null, {
+            status: 401,
+          });
+        }
+
+        const playlist = await prisma.playlist.findUnique({
+          where: {
+            id: playlistId,
+          },
+        });
+        if (!playlist) {
+          return new Response(null, {
+            status: 404,
+          });
+        }
+        if (playlist.userId !== user.id) {
+          return new Response(null, {
+            status: 403,
+          });
+        }
+        try {
+          const updateData = {
+            name: name,
+            description: description,
+            private: isPrivate,
+          };
+          const playlist = await prisma.playlist.update({
+            where: { id: playlistId },
+            data: { ...updateData },
+          });
+
+          return playlist;
+        } catch (error) {
+          return new Response(null, {
+            status: 404,
+          });
+        }
+
         return;
       },
     )
-    .delete("/:playlistId", async ({ params: { playlistId } }) => {
-      return;
-    })
+    .delete(
+      "/:playlistId",
+      async ({ user, session, params: { playlistId } }) => {
+        if (!user || !session) {
+          return new Response(null, {
+            status: 401,
+          });
+        }
+
+        const playlist = await prisma.playlist.findUnique({
+          where: {
+            id: playlistId,
+          },
+        });
+        if (!playlist) {
+          return new Response(null, {
+            status: 404,
+          });
+        }
+        if (playlist.userId !== user.id) {
+          return new Response(null, {
+            status: 403,
+          });
+        }
+        try {
+          await prisma.playlist.delete({
+            where: { id: playlistId },
+          });
+        } catch (error) {
+          return new Response(null, {
+            status: 404,
+          });
+        }
+
+        return;
+      },
+    )
     .post(
       "/browse",
       async ({
