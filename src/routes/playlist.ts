@@ -13,7 +13,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
       async ({
         user,
         session,
-        params: { name, description, isPrivate, thumbnail },
+        body: { name, description, isPrivate, thumbnail },
       }) => {
         if (!user || !session) {
           return new Response(null, {
@@ -44,8 +44,16 @@ export const playlists = new Elysia().group("/playlist", (app) => {
 
         return playlist;
       },
+      {
+        body: t.Object({
+          name: t.String(),
+          description: t.String(),
+          isPrivate: t.Boolean(),
+          thumbnail: t.String(),
+        }),
+      },
     )
-    .post(
+    .get(
       "/:playlistId/asset/:assetId",
       async ({ user, session, params: { playlistId, assetId } }) => {
         if (!user || !session) {
@@ -86,15 +94,29 @@ export const playlists = new Elysia().group("/playlist", (app) => {
 
         return playlist;
       },
+      {
+        params: t.Object({
+          playlistId: t.String({
+            format: "uuid",
+          }),
+          assetId: t.String({
+            format: "uuid",
+          }),
+        }),
+      },
     )
     .delete(
       "/:playlistId/asset/:assetId",
       async ({ user, session, params: { playlistId, assetId } }) => {
         if (!user || !session) {
+          console.log(user);
+          console.log(session);
+          console.log("here");
           return new Response(null, {
             status: 401,
           });
         }
+        console.log("nothere");
         console.log(user);
         let playlist = await prisma.playlist.findFirst({
           where: {
@@ -127,6 +149,16 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         });
 
         return playlist;
+      },
+      {
+        params: t.Object({
+          playlistId: t.String({
+            format: "uuid",
+          }),
+          assetId: t.String({
+            format: "uuid",
+          }),
+        }),
       },
     )
     .get(
@@ -264,11 +296,12 @@ export const playlists = new Elysia().group("/playlist", (app) => {
       },
     )
     .put(
-      "/",
+      "/:playlistId/",
       async ({
         user,
         session,
-        params: { playlistId, name, description, isPrivate, thumbnail },
+        params: { playlistId },
+        body: { name, description, isPrivate, thumbnail },
       }) => {
         if (!user || !session) {
           return new Response(null, {
@@ -309,6 +342,21 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           });
         }
       },
+      {
+        params: t.Object({
+          playlistId: t.String({
+            format: "uuid",
+          }),
+        }),
+        body: t.Partial(
+          t.Object({
+            name: t.String(),
+            description: t.String(),
+            isPrivate: t.Boolean(),
+            thumbnail: t.String(),
+          }),
+        ),
+      },
     )
     .delete(
       "/:playlistId",
@@ -345,6 +393,13 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         }
 
         return;
+      },
+      {
+        params: t.Object({
+          playlistId: t.String({
+            format: "uuid",
+          }),
+        }),
       },
     )
     .post(
