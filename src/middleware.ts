@@ -15,10 +15,12 @@ export const authApp = new Elysia().derive(
     if (context.request.method !== "GET") {
       const originHeader = context.request.headers.get("Origin");
       const hostHeader = context.request.headers.get("Host");
+      console.log("originHeader: ", originHeader);
+      console.log("hostHeader: ", hostHeader);
       if (
         !originHeader ||
         !hostHeader ||
-        !verifyRequestOrigin(originHeader, [hostHeader])
+        !verifyRequestOrigin(originHeader, [hostHeader, "localhost:5173"])
       ) {
         console.log("we dun goofed with csrf");
         return {
