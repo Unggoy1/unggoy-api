@@ -63,7 +63,8 @@ model Ugc {
   readOnlyClones  Boolean
   numberOfObjects Int?          @db.UnsignedInt
   files           Json
-  contributors    Contributor[]
+  contributors    Contributor[] @relation("ContributorToUgc") 
+  author     Contributor? @relation("Author", references: [xuid], fields: [authorId] )
   authorId        String
   tag             Tag[]
   playlist        Playlist[]
@@ -74,7 +75,8 @@ model Contributor {
   gamertag   String
   serviceTag String  @db.VarChar(4)
   emblemPath String?
-  ugc        Ugc[]
+  contributorUgc        Ugc[] @relation("ContributorToUgc")
+  authorUgc        Ugc[] @relation("Author")
 }
 
 model Tag {

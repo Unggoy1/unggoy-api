@@ -13,15 +13,15 @@
     "@elysiajs/cors": "0.7.2",
     "@lucia-auth/adapter-prisma": "beta",
     "@lucia-auth/oauth": "^3.5.0",
-    "@prisma/client": "^5.13.0",
-    "prisma": "^5.13.0",
+    "@prisma/client": "^5.17.0",
     "arctic": "^0.10.0",
     "cheerio": "^1.0.0-rc.12",
     "dotenv": "^16.3.1",
     "elysia": "latest",
     "jwt-decode": "^4.0.0",
     "lucia": "latest",
-    "oslo": "^0.24.0"
+    "oslo": "^0.24.0",
+    "prisma": "^5.17.0"
   },
   "devDependencies": {
     "bun-types": "latest"

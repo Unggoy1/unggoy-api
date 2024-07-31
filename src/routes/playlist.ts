@@ -13,7 +13,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
       async ({
         user,
         session,
-        body: { name, description, isPrivate, thumbnail },
+        body: { name, description, isPrivate, thumbnail, assetId },
       }) => {
         if (!user || !session) {
           return new Response(null, {
@@ -39,6 +39,11 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             private: isPrivate,
             thumbnail: thumbnail,
             userId: user.id,
+            ugc: {
+              connect: {
+                assetId,
+              },
+            },
           },
         });
 
@@ -50,10 +55,13 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           description: t.String(),
           isPrivate: t.Boolean(),
           thumbnail: t.String(),
+          assetId: t.String({
+            format: "uuid",
+          }),
         }),
       },
     )
-    .get(
+    .post(
       "/:playlistId/asset/:assetId",
       async ({ user, session, params: { playlistId, assetId } }) => {
         if (!user || !session) {
