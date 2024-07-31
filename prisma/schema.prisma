@@ -12,12 +12,13 @@ datasource db {
 }
 
 model User {
-  id       String    @id @unique
-  username String    @unique
-  oid      String    @unique
-  xuid     String    @unique
+  id       String     @id @unique
+  username String     @unique
+  oid      String     @unique
+  xuid     String     @unique
   sessions Session[]
   oauth    Oauth?
+  Playlist Playlist[]
 }
 
 model Oauth {
@@ -62,9 +63,11 @@ model Ugc {
   readOnlyClones  Boolean
   numberOfObjects Int?          @db.UnsignedInt
   files           Json
-  contributors    Contributor[]
+  contributors    Contributor[] @relation("ContributorToUgc") 
+  author     Contributor? @relation("Author", references: [xuid], fields: [authorId] )
   authorId        String
   tag             Tag[]
+  playlist        Playlist[]
 }
 
 model Contributor {
@@ -72,13 +75,27 @@ model Contributor {
   gamertag   String
   serviceTag String  @db.VarChar(4)
   emblemPath String?
-  ugc        Ugc[]
+  contributorUgc        Ugc[] @relation("ContributorToUgc")
+  authorUgc        Ugc[] @relation("Author")
 }
 
 model Tag {
   id   Int    @id @default(autoincrement())
   name String @unique
   ugc  Ugc[]
+}
+
+model Playlist {
+  id          String  @id @unique @default(uuid())
+  name        String
+  description String
+  thumbnail   String
+  private     Boolean
+  userId      String
+  user        User    @relation(references: [id], fields: [userId], onDelete: Cascade)
+  ugc         Ugc[]
+
+  @@index([userId])
 }
 
 model WaypointSync {

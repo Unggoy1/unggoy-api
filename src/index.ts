@@ -6,6 +6,7 @@ import { user } from "./routes/user";
 import { logout } from "./routes/logout";
 import { cors } from "@elysiajs/cors";
 import dotenv from "dotenv";
+import { playlists } from "./routes/playlist";
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +15,7 @@ const app = new Elysia()
     cors({
       origin: process.env.URL || "localhost:5173", //TODO properly fix this and use ENV or replace this entirely
       allowedHeaders: ["Content-Type", "Authorization"],
+      methods: ["GET", "PUT", "POST", "DELETE"],
       credentials: true,
     }),
   )
@@ -23,6 +25,7 @@ const app = new Elysia()
   .use(login)
   .use(user)
   .use(logout)
+  .use(playlists)
   .listen(PORT);
 
 console.log(
