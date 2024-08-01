@@ -5,10 +5,8 @@ import { cms } from "./routes/cms";
 import { user } from "./routes/user";
 import { logout } from "./routes/logout";
 import { cors } from "@elysiajs/cors";
-import dotenv from "dotenv";
 import { playlists } from "./routes/playlist";
 
-dotenv.config();
 const PORT = process.env.PORT || 3000;
 const app = new Elysia()
   .use(
