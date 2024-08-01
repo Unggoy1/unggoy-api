@@ -104,6 +104,10 @@ model WaypointSync {
   assetKind SyncType @unique
 }
 
+model BetaAccess {
+  gamertag   String  @id @unique
+}
+
 enum SyncType {
   Map
   Prefab

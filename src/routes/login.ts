@@ -95,8 +95,6 @@ export const login = new Elysia().group("/login", (app) => {
         const codeVerifier = entra_oauth_verifier.value;
         const state = query.state;
         const code = query.code;
-        console.log("redirect_url ", redirect_url.value);
-
         //validatestate
         if (
           !storedState ||
@@ -117,8 +115,22 @@ export const login = new Elysia().group("/login", (app) => {
           if (!xboxUser) {
             throw new Error("Xbox Authentication Error");
           }
-          console.log(xboxUser.spartanToken);
-          console.log(xboxUser.clearanceToken);
+          const approvedGamertag = await prisma.betaAccess.findUnique({
+            where: {
+              gamertag: xboxUser.gamertag,
+            },
+          });
+
+          const redirectUrl = new URL(redirect_url.value);
+          if (redirectUrl.searchParams.has("error")) {
+            redirectUrl.searchParams.delete("error");
+          }
+          if (!approvedGamertag) {
+            redirectUrl.searchParams.append("error", "unauthorized");
+            set.status = 403;
+            set.redirect = redirectUrl.toString();
+            return;
+          }
 
           const existingUser = await prisma.user.findFirst({
             where: {
@@ -158,7 +170,7 @@ export const login = new Elysia().group("/login", (app) => {
             });
 
             set.status = 302;
-            set.redirect = redirect_url.value;
+            set.redirect = redirectUrl.toString();
             return;
           }
 
@@ -194,7 +206,7 @@ export const login = new Elysia().group("/login", (app) => {
           //TODO See what attributes should be used for spartan token cookie
           //TODO See how we can refresh this spartan token as long as our session is active
           set.status = 302;
-          set.redirect = redirect_url.value;
+          set.redirect = redirectUrl.toString();
           return;
         } catch (error) {
           console.error(error);
