@@ -47,7 +47,6 @@ export const login = new Elysia().group("/login", (app) => {
             scopes: ["Xboxlive.signin", "Xboxlive.offline_access"],
           },
         );
-        console.log("auth url ", authorizationUrl.toString());
 
         entra_oauth_state.set({
           value: state,
@@ -128,6 +127,7 @@ export const login = new Elysia().group("/login", (app) => {
           if (!approvedGamertag) {
             redirectUrl.searchParams.append("error", "unauthorized");
             set.status = 403;
+            console.log("We are not approved to login?");
             set.redirect = redirectUrl.toString();
             return;
           }
@@ -170,6 +170,9 @@ export const login = new Elysia().group("/login", (app) => {
             });
 
             set.status = 302;
+            console.log(
+              "we should have logged into existing uuser and returned with cookies",
+            );
             set.redirect = redirectUrl.toString();
             return;
           }
@@ -206,15 +209,20 @@ export const login = new Elysia().group("/login", (app) => {
           //TODO See what attributes should be used for spartan token cookie
           //TODO See how we can refresh this spartan token as long as our session is active
           set.status = 302;
+          console.log(
+            "we should have made a new account, cookies, and returned",
+          );
           set.redirect = redirectUrl.toString();
           return;
         } catch (error) {
           console.error(error);
           if (error instanceof OAuth2RequestError) {
+            console.log("we somehow got a 400 error");
             set.status = 400;
             return;
           }
           set.status = 500;
+          console.log("we somehow got a 500 error");
           return;
         }
       },
