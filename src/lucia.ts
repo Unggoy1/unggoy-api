@@ -18,7 +18,7 @@ export const lucia = new Lucia(adapter, {
     attributes: {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      domain: "localhost",
+      domain: process.env.DOMAIN || "localhost",
     },
   },
 });
