@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 const app = new Elysia()
   .use(
     cors({
-      origin: process.env.URL || "localhost:5173", //TODO properly fix this and use ENV or replace this entirely
+      origin: process.env.CORS_URL || "localhost:5173", //TODO properly fix this and use ENV or replace this entirely
       allowedHeaders: ["Content-Type", "Authorization"],
       methods: ["GET", "PUT", "POST", "DELETE"],
       credentials: true,

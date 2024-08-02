@@ -150,12 +150,8 @@ export const login = new Elysia().group("/login", (app) => {
                   },
                 });
               }
-              console.log("generating session");
               const session = await lucia.createSession(existingUser.id, {});
-              console.log("generating session cookie");
               const sessionCookie = lucia.createSessionCookie(session.id);
-              console.log(sessionCookie.attributes);
-              console.log("setting the session cookie");
               auth_session.set({
                 value: sessionCookie.value,
                 ...sessionCookie.attributes,
@@ -175,9 +171,6 @@ export const login = new Elysia().group("/login", (app) => {
               });
 
               set.status = 302;
-              console.log(
-                "we should have logged into existing uuser and returned with cookies",
-              );
               set.redirect = redirectUrl.toString();
               return;
             }
@@ -214,20 +207,15 @@ export const login = new Elysia().group("/login", (app) => {
             //TODO See what attributes should be used for spartan token cookie
             //TODO See how we can refresh this spartan token as long as our session is active
             set.status = 302;
-            console.log(
-              "we should have made a new account, cookies, and returned",
-            );
             set.redirect = redirectUrl.toString();
             return;
           } catch (error) {
             console.error(error);
             if (error instanceof OAuth2RequestError) {
-              console.log("we somehow got a 400 error");
               set.status = 400;
               return;
             }
             set.status = 500;
-            console.log("we somehow got a 500 error");
             return;
           }
         },
