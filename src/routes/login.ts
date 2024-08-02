@@ -154,6 +154,7 @@ export const login = new Elysia().group("/login", (app) => {
               const session = await lucia.createSession(existingUser.id, {});
               console.log("generating session cookie");
               const sessionCookie = lucia.createSessionCookie(session.id);
+              console.log(sessionCookie.attributes);
               console.log("setting the session cookie");
               auth_session.set({
                 value: sessionCookie.value,
