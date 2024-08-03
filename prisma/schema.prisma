@@ -65,6 +65,7 @@ model Ugc {
   readOnlyClones  Boolean
   numberOfObjects Int?          @db.UnsignedInt
   files           Json
+  recommended     Boolean       @default(false)
   contributors    Contributor[] @relation("ContributorToUgc") 
   author     Contributor? @relation("Author", references: [xuid], fields: [authorId] )
   authorId        String
@@ -115,4 +116,8 @@ enum SyncType {
   Map
   Prefab
   UgcGameVariant
+  Recommended343
+  MapDeleted
+  PrefabDeleted
+  UgcGameVariantDeleted
 }
