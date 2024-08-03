@@ -32,10 +32,10 @@ export const maps = new Elysia().group("/ugc", (app) => {
 
       return filteredAsset;
     })
-    .post(
+    .get(
       "/browse",
       async ({
-        body: {
+        query: {
           assetKind,
           sort = "publishedAt",
           order = "desc",
@@ -57,11 +57,11 @@ export const maps = new Elysia().group("/ugc", (app) => {
         if (assetKind) {
           whereOptions.assetKind = assetKind;
         }
-        if (tags && tags.length) {
+        if (tags) {
           whereOptions.tag = {
             some: {
               name: {
-                in: tags,
+                in: [tags],
               },
             },
           };
@@ -125,26 +125,24 @@ export const maps = new Elysia().group("/ugc", (app) => {
         // };
       },
       {
-        body: t.Partial(
+        query: t.Partial(
           t.Object({
-            assetKind: t.Number(),
+            assetKind: t.Numeric(),
             sort: t.String({
               default: "publishedAt",
             }),
             order: t.String({
               default: "desc",
             }),
-            count: t.Number({
+            count: t.Numeric({
               minimum: 1,
               maximum: 30,
               default: 20,
             }),
-            offset: t.Number({
+            offset: t.Numeric({
               default: 0,
             }),
-            tags: t.Array(t.String(), {
-              maxItems: 10,
-            }),
+            tags: t.String(),
             searchTerm: t.String(),
             gamertag: t.String(),
             ownerOnly: t.Boolean(),

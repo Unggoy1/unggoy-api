@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { lucia, entraId } from "../lucia";
 import { prisma } from "../prisma";
 import { authApp } from "../middleware";
+import { getAppearance } from "../authTools";
 import {
   generateState,
   generateCodeVerifier,
@@ -112,14 +113,25 @@ export const login = new Elysia().group("/login", (app) => {
               await entraId.validateAuthorizationCode(code, codeVerifier);
             const user = await jwtDecode<entraIdTokenPayload>(tokens.idToken);
             const xboxUser = await refreshSpartanToken(tokens.refreshToken!);
+
             if (!xboxUser) {
               throw new Error("Xbox Authentication Error");
             }
+
             const approvedGamertag = await prisma.betaAccess.findUnique({
               where: {
                 gamertag: xboxUser.gamertag,
               },
             });
+
+            const headers: HeadersInit = {
+              "X-343-Authorization-Spartan": xboxUser.spartanToken.SpartanToken,
+              "343-Clearance": xboxUser.clearanceToken,
+            };
+            const appearance = await getAppearance(xboxUser.xuid, headers);
+            appearance.emblemPath = appearance.emblemPath.startsWith("/")
+              ? appearance.emblemPath
+              : "/" + appearance.emblemPath;
 
             const redirectUrl = new URL(redirect_url.value);
             if (redirectUrl.searchParams.has("error")) {
@@ -140,13 +152,19 @@ export const login = new Elysia().group("/login", (app) => {
             });
 
             if (existingUser) {
-              if (existingUser.username !== xboxUser.gamertag) {
+              if (
+                existingUser.username !== xboxUser.gamertag ||
+                existingUser.serviceTag !== appearance.serviceTag ||
+                existingUser.emblemPath !== appearance.emblemPath
+              ) {
                 await prisma.user.update({
                   where: {
                     oid: user.oid,
                   },
                   data: {
                     username: xboxUser.gamertag,
+                    serviceTag: appearance.serviceTag,
+                    emblemPath: appearance.emblemPath,
                   },
                 });
               }
@@ -183,6 +201,10 @@ export const login = new Elysia().group("/login", (app) => {
                 username: xboxUser.gamertag,
                 oid: user.oid,
                 xuid: xboxUser.xuid,
+                serviceTag: appearance.serviceTag,
+                emblemPath: appearance.emblemPath.startsWith("/")
+                  ? appearance.emblemPath
+                  : "/" + appearance.emblemPath,
               },
             });
 

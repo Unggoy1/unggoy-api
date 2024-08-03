@@ -14,7 +14,7 @@ export const user = new Elysia().use(authApp).get("/user", async (context) => {
     include: {
       Playlist: {
         select: {
-          id: true,
+          assetId: true,
           name: true,
         },
       },
