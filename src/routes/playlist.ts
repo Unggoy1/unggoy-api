@@ -37,7 +37,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             name: name,
             description: description,
             private: isPrivate,
-            thumbnail: thumbnail,
+            thumbnailUrl: thumbnail,
             userId: user.id,
             ugc: {
               connect: {
@@ -89,7 +89,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
 
         playlist = await prisma.playlist.update({
           where: {
-            id: playlistId,
+            assetId: playlistId,
           },
           data: {
             ugc: {
@@ -145,7 +145,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
 
         playlist = await prisma.playlist.update({
           where: {
-            id: playlistId,
+            assetId: playlistId,
           },
           data: {
             ugc: {
@@ -184,6 +184,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           tags,
           searchTerm,
           gamertag,
+          ownerOnly,
         },
       }) => {
         // if (!user || !session) {
@@ -194,7 +195,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         //TODO: Watch and do tests to see if this should be removed and the authentication check just happens after getting all the data to return
         let playlist = await prisma.playlist.findUnique({
           where: {
-            id: playlistId,
+            assetId: playlistId,
           },
         });
         if (!playlist) {
@@ -212,7 +213,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         const whereOptions: any = {
           playlist: {
             some: {
-              id: playlistId,
+              assetId: playlistId,
             },
           },
         };
@@ -225,15 +226,31 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         if (assetKind) {
           whereOptions.assetKind = assetKind;
         }
-        if (tags && tags.length) {
+        if (tags) {
           whereOptions.tag = {
             some: {
               name: {
-                in: tags,
+                in: [tags],
               },
             },
           };
         }
+        if (gamertag) {
+          if (ownerOnly) {
+            whereOptions.author = {
+              is: {
+                gamertag: gamertag,
+              },
+            };
+          } else {
+            whereOptions.contributors = {
+              some: {
+                gamertag: gamertag,
+              },
+            };
+          }
+        }
+
         const [data, totalCount] = await prisma.ugc.findManyAndCount({
           where: whereOptions,
 
@@ -259,8 +276,6 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           take: count,
           skip: offset,
         });
-        console.log(totalCount);
-        console.log(data.length);
         const assets = data.map((asset) => {
           return {
             ...asset,
@@ -294,11 +309,10 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             offset: t.Numeric({
               default: 0,
             }),
-            tags: t.Array(t.String(), {
-              maxItems: 10,
-            }),
+            tags: t.String(),
             searchTerm: t.String(),
             gamertag: t.String(),
+            ownerOnly: t.Boolean(),
           }),
         ),
       },
@@ -319,7 +333,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
 
         const playlist = await prisma.playlist.findUnique({
           where: {
-            id: playlistId,
+            assetId: playlistId,
           },
         });
         if (!playlist) {
@@ -339,7 +353,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             private: isPrivate,
           };
           const playlist = await prisma.playlist.update({
-            where: { id: playlistId },
+            where: { assetId: playlistId },
             data: { ...updateData },
           });
 
@@ -377,7 +391,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
 
         const playlist = await prisma.playlist.findUnique({
           where: {
-            id: playlistId,
+            assetId: playlistId,
           },
         });
         if (!playlist) {
@@ -392,7 +406,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         }
         try {
           await prisma.playlist.delete({
-            where: { id: playlistId },
+            where: { assetId: playlistId },
           });
         } catch (error) {
           return new Response(null, {
@@ -410,11 +424,11 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         }),
       },
     )
-    .post(
+    .get(
       "/browse",
       async ({
         user,
-        body: {
+        query: {
           sort = "name",
           order = "desc",
           count = 20,
@@ -467,7 +481,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         // };
       },
       {
-        body: t.Partial(
+        query: t.Partial(
           t.Object({
             sort: t.String({
               default: "name",
@@ -475,12 +489,12 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             order: t.String({
               default: "desc",
             }),
-            count: t.Number({
+            count: t.Numeric({
               minimum: 1,
               maximum: 30,
               default: 20,
             }),
-            offset: t.Number({
+            offset: t.Numeric({
               default: 0,
             }),
             searchTerm: t.String(),

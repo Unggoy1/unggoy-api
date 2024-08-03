@@ -16,6 +16,8 @@ model User {
   username String     @unique
   oid      String     @unique
   xuid     String     @unique
+  serviceTag String  @db.VarChar(4)
+  emblemPath String?
   sessions Session[]
   oauth    Oauth?
   Playlist Playlist[]
@@ -86,10 +88,11 @@ model Tag {
 }
 
 model Playlist {
-  id          String  @id @unique @default(uuid())
+  assetId          String  @id @unique @default(uuid())
   name        String
+  assetKind       Int           @db.UnsignedTinyInt @default(5)
   description String
-  thumbnail   String
+  thumbnailUrl  String
   private     Boolean
   userId      String
   user        User    @relation(references: [id], fields: [userId], onDelete: Cascade)
