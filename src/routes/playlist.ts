@@ -69,10 +69,10 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             status: 401,
           });
         }
-        console.log(user);
-        let playlist = await prisma.playlist.findFirst({
+        let playlist = await prisma.playlist.findUnique({
           where: {
             userId: user.id,
+            assetId: playlistId,
           },
         });
         if (!playlist) {
@@ -117,18 +117,14 @@ export const playlists = new Elysia().group("/playlist", (app) => {
       "/:playlistId/asset/:assetId",
       async ({ user, session, params: { playlistId, assetId } }) => {
         if (!user || !session) {
-          console.log(user);
-          console.log(session);
-          console.log("here");
           return new Response(null, {
             status: 401,
           });
         }
-        console.log("nothere");
-        console.log(user);
-        let playlist = await prisma.playlist.findFirst({
+        let playlist = await prisma.playlist.findUnique({
           where: {
             userId: user.id,
+            assetId: playlistId,
           },
         });
         if (!playlist) {
@@ -187,17 +183,29 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           ownerOnly,
         },
       }) => {
-        // if (!user || !session) {
-        //   return new Response(null, {
-        //     status: 401,
-        //   });
-        // }
-        //TODO: Watch and do tests to see if this should be removed and the authentication check just happens after getting all the data to return
+        console.log("calling playlisst get ");
+        let includeOptions = {};
+        if (user && session) {
+          console.log("we have the user");
+          includeOptions = {
+            favoritedBy: {
+              where: {
+                id: user.id,
+              },
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          };
+        }
         let playlist = await prisma.playlist.findUnique({
           where: {
             assetId: playlistId,
           },
+          include: includeOptions,
         });
+
         if (!playlist) {
           return new Response(null, {
             status: 404,
@@ -472,13 +480,6 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         });
 
         return { totalCount: totalCount, pageSize: count, assets: data };
-
-        // const results = {
-        //   results: jsonContent.props?.pageProps?.results,
-        //   totalPages: jsonContent.props?.pageProps?.totalPages,
-        //   totalResults: jsonContent.props?.pageProps?.totalResults,
-        //   pageSize: jsonContent.props?.pageProps?.pageSize,
-        // };
       },
       {
         query: t.Partial(
