@@ -5,33 +5,77 @@ import { prisma } from "../prisma";
 export const favorites = new Elysia().group("/favorites", (app) => {
   return app
     .use(authApp)
-    .get("/", async ({ user, session }) => {
-      if (!user || !session) {
-        return new Response(null, {
-          status: 401,
+    .get(
+      "/",
+      async ({
+        user,
+        session,
+        query: {
+          sort = "name",
+          order = "desc",
+          count = 20,
+          offset = 0,
+          searchTerm,
+          gamertag,
+        },
+      }) => {
+        if (!user || !session) {
+          return new Response(null, {
+            status: 401,
+          });
+        }
+        const whereOptions: any = {
+          favoritedBy: {
+            some: {
+              id: user.id,
+            },
+          },
+        };
+
+        if (searchTerm) {
+          whereOptions.name = {
+            contains: searchTerm,
+          };
+        }
+        if (gamertag) {
+        } else {
+          whereOptions.private = false;
+        }
+
+        const [data, totalCount] = await prisma.playlist.findManyAndCount({
+          where: whereOptions,
+          orderBy: {
+            [sort]: order,
+          },
+          take: count,
+          skip: offset,
         });
-      }
-      let favorites = await prisma.user.findUnique({
-        where: {
-          id: user.id,
-        },
-        omit: {
-          oid: true,
-          xuid: true,
-          serviceTag: true,
-          emblemPath: true,
-        },
-        include: {
-          favorites: true,
-        },
-      });
-      if (!favorites) {
-        return new Response(null, {
-          status: 404,
-        });
-      }
-      return favorites;
-    })
+
+        return { totalCount: totalCount, pageSize: count, assets: data };
+      },
+      {
+        query: t.Partial(
+          t.Object({
+            sort: t.String({
+              default: "name",
+            }),
+            order: t.String({
+              default: "desc",
+            }),
+            count: t.Numeric({
+              minimum: 1,
+              maximum: 30,
+              default: 20,
+            }),
+            offset: t.Numeric({
+              default: 0,
+            }),
+            searchTerm: t.String(),
+            gamertag: t.String(),
+          }),
+        ),
+      },
+    )
     .post(
       "/:assetId",
       async ({ user, session, params: { assetId } }) => {
