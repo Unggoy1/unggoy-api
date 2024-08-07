@@ -456,18 +456,6 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         } else {
           whereOptions.private = false;
         }
-        // if (assetKind) {
-        //   whereOptions.assetKind = assetKind;
-        // }
-        // if (tags && tags.length) {
-        //   whereOptions.tag = {
-        //     some: {
-        //       name: {
-        //         in: tags,
-        //       },
-        //     },
-        //   };
-        // }
 
         const [data, totalCount] = await prisma.playlist.findManyAndCount({
           where: whereOptions,
