@@ -17,6 +17,7 @@
     "arctic": "^0.10.0",
     "cheerio": "^1.0.0-rc.12",
     "elysia": "latest",
+    "elysia-rate-limit": "^4.1.0",
     "jwt-decode": "^4.0.0",
     "lucia": "latest",
     "oslo": "^0.24.0",

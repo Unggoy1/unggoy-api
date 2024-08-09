@@ -69,10 +69,10 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             status: 401,
           });
         }
-        console.log(user);
-        let playlist = await prisma.playlist.findFirst({
+        let playlist = await prisma.playlist.findUnique({
           where: {
             userId: user.id,
+            assetId: playlistId,
           },
         });
         if (!playlist) {
@@ -117,18 +117,14 @@ export const playlists = new Elysia().group("/playlist", (app) => {
       "/:playlistId/asset/:assetId",
       async ({ user, session, params: { playlistId, assetId } }) => {
         if (!user || !session) {
-          console.log(user);
-          console.log(session);
-          console.log("here");
           return new Response(null, {
             status: 401,
           });
         }
-        console.log("nothere");
-        console.log(user);
-        let playlist = await prisma.playlist.findFirst({
+        let playlist = await prisma.playlist.findUnique({
           where: {
             userId: user.id,
+            assetId: playlistId,
           },
         });
         if (!playlist) {
@@ -187,17 +183,29 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           ownerOnly,
         },
       }) => {
-        // if (!user || !session) {
-        //   return new Response(null, {
-        //     status: 401,
-        //   });
-        // }
-        //TODO: Watch and do tests to see if this should be removed and the authentication check just happens after getting all the data to return
+        console.log("calling playlisst get ");
+        let includeOptions = {};
+        if (user && session) {
+          console.log("we have the user");
+          includeOptions = {
+            favoritedBy: {
+              where: {
+                id: user.id,
+              },
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          };
+        }
         let playlist = await prisma.playlist.findUnique({
           where: {
             assetId: playlistId,
           },
+          include: includeOptions,
         });
+
         if (!playlist) {
           return new Response(null, {
             status: 404,
@@ -437,7 +445,9 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           gamertag,
         },
       }) => {
-        const whereOptions: any = {};
+        const whereOptions: any = {
+          private: false,
+        };
 
         if (searchTerm) {
           whereOptions.name = {
@@ -445,21 +455,10 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           };
         }
         if (gamertag) {
-        } else {
-          whereOptions.private = false;
+          whereOptions.user = {
+            username: gamertag,
+          };
         }
-        // if (assetKind) {
-        //   whereOptions.assetKind = assetKind;
-        // }
-        // if (tags && tags.length) {
-        //   whereOptions.tag = {
-        //     some: {
-        //       name: {
-        //         in: tags,
-        //       },
-        //     },
-        //   };
-        // }
 
         const [data, totalCount] = await prisma.playlist.findManyAndCount({
           where: whereOptions,
@@ -472,13 +471,6 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         });
 
         return { totalCount: totalCount, pageSize: count, assets: data };
-
-        // const results = {
-        //   results: jsonContent.props?.pageProps?.results,
-        //   totalPages: jsonContent.props?.pageProps?.totalPages,
-        //   totalResults: jsonContent.props?.pageProps?.totalResults,
-        //   pageSize: jsonContent.props?.pageProps?.pageSize,
-        // };
       },
       {
         query: t.Partial(
@@ -499,6 +491,69 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             }),
             searchTerm: t.String(),
             gamertag: t.String(),
+          }),
+        ),
+      },
+    )
+    .get(
+      "/me",
+      async ({
+        user,
+        session,
+        query: {
+          sort = "name",
+          order = "desc",
+          count = 20,
+          offset = 0,
+          searchTerm,
+        },
+      }) => {
+        if (!user || !session) {
+          return new Response(null, {
+            status: 401,
+          });
+        }
+
+        const whereOptions: any = {
+          userId: user.id,
+        };
+
+        if (searchTerm) {
+          whereOptions.name = {
+            contains: searchTerm,
+          };
+        }
+
+        const [data, totalCount] = await prisma.playlist.findManyAndCount({
+          where: whereOptions,
+
+          orderBy: {
+            [sort]: order,
+          },
+          take: count,
+          skip: offset,
+        });
+
+        return { totalCount: totalCount, pageSize: count, assets: data };
+      },
+      {
+        query: t.Partial(
+          t.Object({
+            sort: t.String({
+              default: "name",
+            }),
+            order: t.String({
+              default: "desc",
+            }),
+            count: t.Numeric({
+              minimum: 1,
+              maximum: 30,
+              default: 20,
+            }),
+            offset: t.Numeric({
+              default: 0,
+            }),
+            searchTerm: t.String(),
           }),
         ),
       },

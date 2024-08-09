@@ -20,7 +20,8 @@ model User {
   emblemPath String?
   sessions Session[]
   oauth    Oauth?
-  Playlist Playlist[]
+  Playlist Playlist[] @relation("User")
+  favorites Playlist[] @relation("Favorites")
 }
 
 model Oauth {
@@ -96,8 +97,9 @@ model Playlist {
   thumbnailUrl  String
   private     Boolean
   userId      String
-  user        User    @relation(references: [id], fields: [userId], onDelete: Cascade)
+  user        User    @relation("User", references: [id], fields: [userId], onDelete: Cascade)
   ugc         Ugc[]
+  favoritedBy       User[]  @relation("Favorites")
 
   @@index([userId])
 }
