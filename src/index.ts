@@ -5,6 +5,8 @@ import { user } from "./routes/user";
 import { logout } from "./routes/logout";
 import { cors } from "@elysiajs/cors";
 import { playlists } from "./routes/playlist";
+import { favorites } from "./routes/favorites";
+import { rateLimit } from "elysia-rate-limit";
 
 const PORT = process.env.PORT || 3000;
 const app = new Elysia()
@@ -16,12 +18,14 @@ const app = new Elysia()
       credentials: true,
     }),
   )
+  // .use(rateLimit())
   .get("/", () => "Hello Elysia")
   .use(maps)
   .use(login)
   .use(user)
   .use(logout)
   .use(playlists)
+  .use(favorites)
   .listen(PORT);
 
 console.log(
