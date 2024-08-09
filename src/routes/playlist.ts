@@ -445,7 +445,9 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           gamertag,
         },
       }) => {
-        const whereOptions: any = {};
+        const whereOptions: any = {
+          private: false,
+        };
 
         if (searchTerm) {
           whereOptions.name = {
@@ -453,8 +455,9 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           };
         }
         if (gamertag) {
-        } else {
-          whereOptions.private = false;
+          whereOptions.user = {
+            username: gamertag,
+          };
         }
 
         const [data, totalCount] = await prisma.playlist.findManyAndCount({
@@ -488,6 +491,69 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             }),
             searchTerm: t.String(),
             gamertag: t.String(),
+          }),
+        ),
+      },
+    )
+    .get(
+      "/me",
+      async ({
+        user,
+        session,
+        query: {
+          sort = "name",
+          order = "desc",
+          count = 20,
+          offset = 0,
+          searchTerm,
+        },
+      }) => {
+        if (!user || !session) {
+          return new Response(null, {
+            status: 401,
+          });
+        }
+
+        const whereOptions: any = {
+          userId: user.id,
+        };
+
+        if (searchTerm) {
+          whereOptions.name = {
+            contains: searchTerm,
+          };
+        }
+
+        const [data, totalCount] = await prisma.playlist.findManyAndCount({
+          where: whereOptions,
+
+          orderBy: {
+            [sort]: order,
+          },
+          take: count,
+          skip: offset,
+        });
+
+        return { totalCount: totalCount, pageSize: count, assets: data };
+      },
+      {
+        query: t.Partial(
+          t.Object({
+            sort: t.String({
+              default: "name",
+            }),
+            order: t.String({
+              default: "desc",
+            }),
+            count: t.Numeric({
+              minimum: 1,
+              maximum: 30,
+              default: 20,
+            }),
+            offset: t.Numeric({
+              default: 0,
+            }),
+            searchTerm: t.String(),
           }),
         ),
       },
