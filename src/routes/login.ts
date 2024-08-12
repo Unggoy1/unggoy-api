@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { lucia, entraId } from "../lucia";
-import { prisma } from "../prisma";
+import prisma from "../prisma";
 import { authApp } from "../middleware";
 import { getAppearance } from "../authTools";
 import {

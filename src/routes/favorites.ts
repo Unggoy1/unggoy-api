@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { authApp } from "../middleware";
-import { prisma } from "../prisma";
+import prisma from "../prisma";
 
 export const favorites = new Elysia().group("/favorites", (app) => {
   return app

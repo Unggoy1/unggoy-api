@@ -9,7 +9,7 @@ import { favorites } from "./routes/favorites";
 import { rateLimit } from "elysia-rate-limit";
 
 const PORT = process.env.PORT || 3000;
-const app = new Elysia()
+export const app = new Elysia()
   .use(
     cors({
       origin: process.env.CORS_URL || "localhost:5173", //TODO properly fix this and use ENV or replace this entirely
