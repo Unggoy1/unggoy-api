@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { authApp } from "../middleware";
 import { load } from "cheerio";
 import { getSpartanToken } from "../authTools";
-import { prisma } from "../prisma";
+import prisma from "../prisma";
 import { Prisma } from "@prisma/client";
 
 export const playlists = new Elysia().group("/playlist", (app) => {

@@ -2,8 +2,11 @@
   "name": "unggoy-api",
   "version": "1.0.50",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "npx prisma generate",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "test": "bun docker:up && bun --env-file=.env.test migrate:deploy &&  bun test",
+    "migrate:deploy": " prisma migrate deploy",
+    "prepare": "bunx prisma generate",
     "dev": "bun run --watch src/index.ts",
     "build": "bun build src/index.ts",
     "start": "NODE_ENV=production bun src/index.ts"
@@ -11,6 +14,7 @@
   "dependencies": {
     "@elysiajs/cookie": "^0.7.0",
     "@elysiajs/cors": "^1.1.0",
+    "@elysiajs/eden": "^1.1.2",
     "@lucia-auth/adapter-prisma": "beta",
     "@lucia-auth/oauth": "^3.5.0",
     "@prisma/client": "^5.17.0",
@@ -24,7 +28,9 @@
     "prisma": "^5.17.0"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "vitest": "^2.0.5",
+    "vitest-mock-extended": "^2.0.0"
   },
   "module": "src/index.js"
 }

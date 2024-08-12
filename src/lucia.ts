@@ -1,7 +1,7 @@
 import { Lucia, TimeSpan } from "lucia";
 import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
 import { MicrosoftEntraId } from "arctic";
-import { prisma } from "./prisma";
+import prisma from "./prisma";
 
 const adapter = new PrismaAdapter(prisma.session, prisma.user);
 export const lucia = new Lucia(adapter, {

@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { authApp } from "../middleware";
 import { load } from "cheerio";
 import { getSpartanToken } from "../authTools";
-import { prisma } from "../prisma";
+import prisma from "../prisma";
 
 export const maps = new Elysia().group("/ugc", (app) => {
   return app
@@ -44,7 +44,7 @@ export const maps = new Elysia().group("/ugc", (app) => {
           tags,
           searchTerm,
           gamertag,
-          ownerOnly,
+          ownerOnly = true,
         },
       }) => {
         const whereOptions: any = {};
@@ -145,7 +145,9 @@ export const maps = new Elysia().group("/ugc", (app) => {
             tags: t.String(),
             searchTerm: t.String(),
             gamertag: t.String(),
-            ownerOnly: t.Boolean(),
+            ownerOnly: t.Boolean({
+              default: true,
+            }),
           }),
         ),
       },

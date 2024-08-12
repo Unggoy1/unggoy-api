@@ -1,4 +1,4 @@
-import { prisma } from "./prisma";
+import prisma from "./prisma";
 import { refreshSpartanToken } from "./auth";
 
 export async function getSpartanToken(userId: string) {

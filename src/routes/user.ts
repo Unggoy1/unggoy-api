@@ -1,6 +1,6 @@
 import Elysia from "elysia";
 import { authApp } from "../middleware";
-import { prisma } from "../prisma";
+import prisma from "../prisma";
 export const user = new Elysia().use(authApp).get("/user", async (context) => {
   if (!context.user) {
     return new Response(null, {
