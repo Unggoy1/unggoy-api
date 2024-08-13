@@ -20,5 +20,10 @@ export const user = new Elysia().use(authApp).get("/user", async (context) => {
       },
     },
   });
+  if (!user) {
+    return new Response(null, {
+      status: 404,
+    });
+  }
   return user;
 });
