@@ -66,7 +66,6 @@ export const maps = new Elysia().group("/ugc", (app) => {
             },
           };
         }
-        console.log(ownerOnly);
         if (gamertag) {
           if (ownerOnly) {
             whereOptions.author = {
