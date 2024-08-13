@@ -16,16 +16,16 @@
     "@elysiajs/cors": "^1.1.0",
     "@elysiajs/eden": "^1.1.2",
     "@lucia-auth/adapter-prisma": "beta",
-    "@lucia-auth/oauth": "^3.5.0",
-    "@prisma/client": "^5.17.0",
-    "arctic": "^0.10.0",
-    "cheerio": "^1.0.0-rc.12",
+    "@lucia-auth/oauth": "^3.5.3",
+    "@prisma/client": "^5.18.0",
+    "arctic": "^0.10.6",
+    "cheerio": "^1.0.0",
     "elysia": "latest",
     "elysia-rate-limit": "^4.1.0",
     "jwt-decode": "^4.0.0",
     "lucia": "latest",
     "oslo": "^0.24.0",
-    "prisma": "^5.17.0"
+    "prisma": "^5.18.0"
   },
   "devDependencies": {
     "bun-types": "latest",

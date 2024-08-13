@@ -44,7 +44,7 @@ export const maps = new Elysia().group("/ugc", (app) => {
           tags,
           searchTerm,
           gamertag,
-          ownerOnly = true,
+          ownerOnly = false,
         },
       }) => {
         const whereOptions: any = {};
@@ -66,6 +66,7 @@ export const maps = new Elysia().group("/ugc", (app) => {
             },
           };
         }
+        console.log(ownerOnly);
         if (gamertag) {
           if (ownerOnly) {
             whereOptions.author = {
@@ -146,7 +147,7 @@ export const maps = new Elysia().group("/ugc", (app) => {
             searchTerm: t.String(),
             gamertag: t.String(),
             ownerOnly: t.Boolean({
-              default: true,
+              default: false,
             }),
           }),
         ),
