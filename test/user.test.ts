@@ -28,6 +28,11 @@ describe("User", async () => {
       expect(error).toBeNull();
       expect(data).not.toBeNull();
       expect(data?.username).toEqual("Master Chief");
+      expect(data?.id).toEqual("d9st0aohdnch56c");
+      expect(data?.oid).toEqual("00000000-0000-0000-000-000000000001");
+      expect(data?.xuid).toEqual("0000000000000001");
+      expect(data?.serviceTag).toEqual("117");
+      expect(data?.emblemPath).toEqual("/emblems/olympus_stuck_emblem.png");
     });
 
     it("Cannot get a users profile(no cookies)", async () => {

@@ -39,6 +39,18 @@ export async function seedDatabase() {
   await prisma.playlist.createMany({
     data: playlists,
   });
+  let i = 0;
+  for (const playlist of playlists) {
+    await prisma.playlist.update({
+      where: { assetId: playlist.assetId },
+      data: {
+        ugc: {
+          connect: assets.slice(i).map((asset) => ({ assetId: asset.assetId })),
+        },
+      },
+    });
+    i++;
+  }
 }
 
 export async function resetDatabase() {
