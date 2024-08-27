@@ -395,7 +395,7 @@ export const playlists = [
     description: "This is a playlist that i dont own and is private",
     thumbnailUrl:
       "https://blobs-infiniteugc.svc.halowaypoint.com/ugcstorage/map/fa185860-98bd-4e63-bc3d-914b98e77330/37f416ca-b5f8-4b22-899d-6f0ff80cbdb9/images/thumbnail.jpg",
-    private: false,
+    private: true,
     userId: "a8bb0aohdnch97a",
   },
 ];
