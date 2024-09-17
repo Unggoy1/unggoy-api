@@ -20,6 +20,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         body: { name, description, isPrivate = false, thumbnail, assetId },
         request: { headers },
       }) => {
+        console.log("we have run this function baby");
         if (!user || !session) {
           throw new Unauthorized();
         }
@@ -46,7 +47,8 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             name: name,
             description: description,
             private: isPrivate,
-            thumbnailUrl: thumbnail,
+            thumbnailUrl:
+              "https://blobs-infiniteugc.svc.halowaypoint.com/ugcstorage/map/0000d628-0e72-4cfc-ba9b-cd73f5af1213/0d0283a1-a122-4bd5-a434-c12148cdd88a/images/thumbnail.jpg",
             userId: user.id,
             ...connectOptions,
           },
@@ -56,10 +58,19 @@ export const playlists = new Elysia().group("/playlist", (app) => {
       },
       {
         body: t.Object({
-          name: t.String(),
-          description: t.String(),
-          isPrivate: t.Optional(t.Boolean({ default: false })),
-          thumbnail: t.String(),
+          name: t.String({
+            maxLength: 255,
+            minLength: 3,
+          }),
+          description: t.String({
+            maxLength: 255,
+            minLength: 10,
+          }),
+          isPrivate: t.Optional(t.BooleanString({ default: false })),
+          thumbnail: t.File({
+            type: "image",
+            maxSize: "1m",
+          }),
           assetId: t.Optional(
             t.String({
               format: "uuid",
@@ -71,6 +82,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
     .post(
       "/:playlistId/asset/:assetId",
       async ({ user, session, params: { playlistId, assetId } }) => {
+        console.log("adding to existing baby");
         if (!user || !session) {
           throw new Unauthorized();
         }
@@ -388,10 +400,19 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         }),
         body: t.Partial(
           t.Object({
-            name: t.String(),
-            description: t.String(),
+            name: t.String({
+              maxLength: 255,
+              minLength: 3,
+            }),
+            description: t.String({
+              maxLength: 255,
+              minLength: 10,
+            }),
             isPrivate: t.Boolean(),
-            thumbnail: t.String(),
+            thumbnail: t.File({
+              type: "image",
+              maxSize: "1m",
+            }),
           }),
         ),
       },
