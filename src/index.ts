@@ -27,12 +27,15 @@ export const app = new Elysia()
   )
   .error({ Unauthorized, Forbidden, NotFound, Duplicate, Unknown })
   .onError(({ code, error }) => {
+    console.log(code);
+    console.log(error);
     const customErrors = [
       "Unauthorized",
       "Forbidden",
       "NotFound",
       "Duplicate",
       "Unknown",
+      "VALIDATION",
     ];
     if (customErrors.includes(code)) return error;
     return new Response(error.toString());
