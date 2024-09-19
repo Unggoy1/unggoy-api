@@ -402,13 +402,13 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           t.Object({
             name: t.String({
               maxLength: 255,
-              minLength: 3,
+              minLength: 4,
             }),
             description: t.String({
               maxLength: 255,
               minLength: 10,
             }),
-            isPrivate: t.Boolean(),
+            isPrivate: t.BooleanString(),
             thumbnail: t.File({
               type: "image",
               maxSize: "1m",
