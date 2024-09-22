@@ -13,6 +13,7 @@ import {
   NotFound,
   Unauthorized,
   Unknown,
+  Validation,
 } from "./lib/errors";
 
 const PORT = process.env.PORT || 3000;
@@ -25,7 +26,7 @@ export const app = new Elysia()
       credentials: true,
     }),
   )
-  .error({ Unauthorized, Forbidden, NotFound, Duplicate, Unknown })
+  .error({ Unauthorized, Forbidden, NotFound, Duplicate, Unknown, Validation })
   .onError(({ code, error }) => {
     console.log(code);
     console.log(error);
@@ -35,10 +36,11 @@ export const app = new Elysia()
       "NotFound",
       "Duplicate",
       "Unknown",
+      "Validation",
       "VALIDATION",
     ];
     if (customErrors.includes(code)) return error;
-    return new Response(error.toString());
+    return new Error(error.toString());
   })
   .get("/", () => "Hello Elysia")
   .use(maps)

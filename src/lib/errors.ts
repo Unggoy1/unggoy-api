@@ -44,3 +44,12 @@ export class Duplicate extends Error {
     super(message);
   }
 }
+
+export class Validation extends Error {
+  constructor(
+    public message: string = "Validation",
+    public status = 422,
+  ) {
+    super(message);
+  }
+}
