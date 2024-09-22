@@ -7,7 +7,9 @@ import {
   NotFound,
   Unauthorized,
   Unknown,
+  Validation,
 } from "../lib/errors";
+import { checkImageNsfw } from "../lib/imageTools";
 
 export const playlists = new Elysia().group("/playlist", (app) => {
   return app
@@ -32,6 +34,13 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         });
         if (playlist) {
           throw new Duplicate();
+        }
+
+        if (thumbnail) {
+          const isImageNSFW = await checkImageNsfw(thumbnail);
+          if (isImageNSFW) {
+            throw new Validation();
+          }
         }
         const connectOptions: any = {};
         if (assetId) {
@@ -352,6 +361,12 @@ export const playlists = new Elysia().group("/playlist", (app) => {
       }) => {
         if (!user || !session) {
           throw new Unauthorized();
+        }
+        if (thumbnail) {
+          const isImageNSFW = await checkImageNsfw(thumbnail);
+          if (isImageNSFW) {
+            throw new Validation();
+          }
         }
         const playlist = await prisma.playlist.findUnique({
           where: {
