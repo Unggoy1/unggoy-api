@@ -9,7 +9,15 @@ import {
   Unknown,
   Validation,
 } from "../lib/errors";
-import { checkImageNsfw } from "../lib/imageTools";
+import {
+  checkImageNsfw,
+  deleteFromS3,
+  extractS3Key,
+  generateUniqueFilename,
+  resizeAndOptimizeFileToWebP,
+  updateS3File,
+  uploadToS3,
+} from "../lib/imageTools";
 
 export const playlists = new Elysia().group("/playlist", (app) => {
   return app
@@ -22,7 +30,6 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         body: { name, description, isPrivate = false, thumbnail, assetId },
         request: { headers },
       }) => {
-        console.log("we have run this function baby");
         if (!user || !session) {
           throw new Unauthorized();
         }
@@ -36,12 +43,6 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           throw new Duplicate();
         }
 
-        if (thumbnail) {
-          const isImageNSFW = await checkImageNsfw(thumbnail);
-          if (isImageNSFW) {
-            throw new Validation();
-          }
-        }
         const connectOptions: any = {};
         if (assetId) {
           connectOptions.ugc = {
@@ -50,14 +51,29 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             },
           };
         }
+        let fileName;
+        if (thumbnail) {
+          const isImageNSFW = await checkImageNsfw(thumbnail);
+          if (isImageNSFW) {
+            throw new Validation();
+          }
+          const webpImage = await resizeAndOptimizeFileToWebP(
+            thumbnail,
+            560,
+            320,
+          );
+          fileName = generateUniqueFilename(user.id);
+          await uploadToS3(webpImage, process.env.S3_BUCKET_NAME, fileName);
+        }
 
         playlist = await prisma.playlist.create({
           data: {
             name: name,
             description: description,
             private: isPrivate,
-            thumbnailUrl:
-              "https://blobs-infiniteugc.svc.halowaypoint.com/ugcstorage/map/0000d628-0e72-4cfc-ba9b-cd73f5af1213/0d0283a1-a122-4bd5-a434-c12148cdd88a/images/thumbnail.jpg",
+            thumbnailUrl: fileName
+              ? `${process.env.IMAGE_DOMAIN}${fileName}`
+              : "/placeholder.webp",
             userId: user.id,
             ...connectOptions,
           },
@@ -76,10 +92,12 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             minLength: 10,
           }),
           isPrivate: t.Optional(t.BooleanString({ default: false })),
-          thumbnail: t.File({
-            type: "image",
-            maxSize: "1m",
-          }),
+          thumbnail: t.Optional(
+            t.File({
+              type: "image",
+              maxSize: "1m",
+            }),
+          ),
           assetId: t.Optional(
             t.String({
               format: "uuid",
@@ -362,13 +380,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         if (!user || !session) {
           throw new Unauthorized();
         }
-        if (thumbnail) {
-          const isImageNSFW = await checkImageNsfw(thumbnail);
-          if (isImageNSFW) {
-            throw new Validation();
-          }
-        }
-        const playlist = await prisma.playlist.findUnique({
+        let playlist = await prisma.playlist.findUnique({
           where: {
             assetId: playlistId,
           },
@@ -392,12 +404,39 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           }
         }
         try {
-          const updateData = {
+          const updateData: {
+            name?: string;
+            description?: string;
+            private?: boolean;
+            thumbnailUrl?: string;
+          } = {
             name: name,
             description: description,
             private: isPrivate,
           };
-          const playlist = await prisma.playlist.update({
+
+          let fileName;
+          if (thumbnail) {
+            const isImageNSFW = await checkImageNsfw(thumbnail);
+            if (isImageNSFW) {
+              throw new Validation();
+            }
+            const webpImage = await resizeAndOptimizeFileToWebP(
+              thumbnail,
+              560,
+              320,
+            );
+            fileName = generateUniqueFilename(user.id);
+            await updateS3File(
+              webpImage,
+              process.env.S3_BUCKET_NAME,
+              fileName,
+              playlist.thumbnailUrl,
+            );
+            updateData.thumbnailUrl = `${process.env.IMAGE_DOMAIN}${fileName}`;
+          }
+
+          playlist = await prisma.playlist.update({
             where: { assetId: playlistId },
             data: { ...updateData },
           });
@@ -450,10 +489,15 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         if (playlist.userId !== user.id) {
           throw new Forbidden();
         }
+
         try {
           await prisma.playlist.delete({
             where: { assetId: playlistId },
           });
+          const thumbnailKey = extractS3Key(playlist.thumbnailUrl);
+          if (thumbnailKey) {
+            await deleteFromS3(process.env.S3_BUCKET_NAME, thumbnailKey);
+          }
         } catch (error) {
           throw new Unknown();
         }

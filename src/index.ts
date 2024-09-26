@@ -16,6 +16,26 @@ import {
   Validation,
 } from "./lib/errors";
 
+declare module "bun" {
+  interface Env {
+    DATABASE_URL: string;
+    AZURE_CLIENT_ID: string;
+    AZURE_CLIENT_SECRET: string;
+    AZURE_TENANT: string;
+    AZURE_REDIRECT_URI: string;
+    AZURE_SCOPE: string;
+    PORT: string;
+    CORS_URL: string;
+    DOMAIN: string;
+    AWS_ACCESS_KEY_ID: string;
+    AWS_SECRET_ACCESS_KEY: string;
+    AWS_ENDPOINT_URL: string;
+    AWS_REGION: string;
+    S3_BUCKET_NAME: string;
+    IMAGE_DOMAIN: string;
+  }
+}
+
 const PORT = process.env.PORT || 3000;
 export const app = new Elysia()
   .use(
