@@ -45,6 +45,7 @@ export const maps = new Elysia().group("/ugc", (app) => {
           searchTerm,
           gamertag,
           ownerOnly = false,
+          recommendedOnly = false,
         },
       }) => {
         const whereOptions: any = {};
@@ -80,6 +81,9 @@ export const maps = new Elysia().group("/ugc", (app) => {
               },
             };
           }
+        }
+        if (recommendedOnly === true) {
+          whereOptions.recommended = true;
         }
 
         const [data, totalCount] = await prisma.ugc.findManyAndCount({
@@ -146,6 +150,9 @@ export const maps = new Elysia().group("/ugc", (app) => {
             searchTerm: t.String(),
             gamertag: t.String(),
             ownerOnly: t.Boolean({
+              default: false,
+            }),
+            recommendedOnly: t.Boolean({
               default: false,
             }),
           }),
