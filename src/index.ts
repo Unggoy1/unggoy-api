@@ -6,6 +6,8 @@ import { logout } from "./routes/logout";
 import { cors } from "@elysiajs/cors";
 import { playlists } from "./routes/playlist";
 import { favorites } from "./routes/favorites";
+import { cron, Patterns } from "@elysiajs/cron";
+import { lucia } from "./lucia";
 import { rateLimit } from "elysia-rate-limit";
 import {
   Duplicate,
@@ -44,6 +46,17 @@ export const app = new Elysia()
       allowedHeaders: ["Content-Type", "Authorization"],
       methods: ["GET", "PUT", "POST", "DELETE"],
       credentials: true,
+    }),
+  )
+  .use(
+    cron({
+      name: "waypointSyncJob",
+      pattern: Patterns.EVERY_DAY_AT_6AM,
+      run: async () => {
+        const date = new Date();
+        console.log("Starting Cron Job: ", date.toString());
+        await lucia.deleteExpiredSessions();
+      },
     }),
   )
   .error({ Unauthorized, Forbidden, NotFound, Duplicate, Unknown, Validation })

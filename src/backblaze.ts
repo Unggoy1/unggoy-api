@@ -23,18 +23,4 @@ const b2 = new S3Client({
 });
 
 // Function to list all buckets
-const listBuckets = async () => {
-  try {
-    const response = await b2.send(new ListBucketsCommand({}));
-    console.log("Buckets in account:");
-    response!.Buckets!.forEach((bucket) => {
-      console.log(bucket.Name);
-    });
-  } catch (err) {
-    console.error("Error listing buckets:", err);
-    throw err;
-  }
-};
-
-await listBuckets();
 export default b2;
