@@ -33,6 +33,15 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         if (!user || !session) {
           throw new Unauthorized();
         }
+        // Check if user has reached playlist limit
+        const playlistCount = await prisma.playlist.count({
+          where: { userId: user.id },
+        });
+
+        if (playlistCount >= 50) {
+          throw new Forbidden();
+        }
+
         let playlist = await prisma.playlist.findFirst({
           where: {
             userId: user.id,
@@ -148,6 +157,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
                 assetId,
               },
             },
+            updatedAt: new Date(),
           },
         });
 
@@ -199,6 +209,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
                 assetId,
               },
             },
+            updatedAt: new Date(),
           },
         });
 
@@ -236,6 +247,9 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         let includeOptions = {};
         if (user && session) {
           includeOptions = {
+            _count: {
+              select: { favoritedBy: true },
+            },
             favoritedBy: {
               where: {
                 id: user.id,
@@ -545,13 +559,15 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             username: gamertag,
           };
         }
+        const sortOptions: any =
+          sort === "favorites"
+            ? { favoritedBy: { _count: "desc" } }
+            : { [sort]: order };
 
         const [data, totalCount] = await prisma.playlist.findManyAndCount({
           where: whereOptions,
 
-          orderBy: {
-            [sort]: order,
-          },
+          orderBy: sortOptions,
           take: count,
           skip: offset,
         });
@@ -607,13 +623,15 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             contains: searchTerm,
           };
         }
+        const sortOptions: any =
+          sort === "favorites"
+            ? { favoritedBy: { _count: "desc" } }
+            : { [sort]: order };
 
         const [data, totalCount] = await prisma.playlist.findManyAndCount({
           where: whereOptions,
 
-          orderBy: {
-            [sort]: order,
-          },
+          orderBy: sortOptions,
           take: count,
           skip: offset,
         });
