@@ -41,11 +41,14 @@ export const favorites = new Elysia().group("/favorites", (app) => {
           whereOptions.private = false;
         }
 
+        const sortOptions: any =
+          sort === "favorites"
+            ? { favoritedBy: { _count: "desc" } }
+            : { [sort]: order };
+
         const [data, totalCount] = await prisma.playlist.findManyAndCount({
           where: whereOptions,
-          orderBy: {
-            [sort]: order,
-          },
+          orderBy: sortOptions,
           take: count,
           skip: offset,
         });
