@@ -245,6 +245,12 @@ export const playlists = new Elysia().group("/playlist", (app) => {
                 username: true,
               },
             },
+            user: {
+              select: {
+                username: true,
+                emblemPath: true,
+              },
+            },
           };
         }
         let playlist = await prisma.playlist.findUnique({
