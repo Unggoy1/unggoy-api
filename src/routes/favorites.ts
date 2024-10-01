@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { authApp } from "../middleware";
-import { prisma } from "../prisma";
+import prisma from "../prisma";
+import { Forbidden, NotFound, Unauthorized } from "../lib/errors";
 
 export const favorites = new Elysia().group("/favorites", (app) => {
   return app
@@ -20,9 +21,7 @@ export const favorites = new Elysia().group("/favorites", (app) => {
         },
       }) => {
         if (!user || !session) {
-          return new Response(null, {
-            status: 401,
-          });
+          throw new Unauthorized();
         }
         const whereOptions: any = {
           favoritedBy: {
@@ -42,11 +41,14 @@ export const favorites = new Elysia().group("/favorites", (app) => {
           whereOptions.private = false;
         }
 
+        const sortOptions: any =
+          sort === "favorites"
+            ? { favoritedBy: { _count: "desc" } }
+            : { [sort]: order };
+
         const [data, totalCount] = await prisma.playlist.findManyAndCount({
           where: whereOptions,
-          orderBy: {
-            [sort]: order,
-          },
+          orderBy: sortOptions,
           take: count,
           skip: offset,
         });
@@ -80,9 +82,7 @@ export const favorites = new Elysia().group("/favorites", (app) => {
       "/:assetId",
       async ({ user, session, params: { assetId } }) => {
         if (!user || !session) {
-          return new Response(null, {
-            status: 401,
-          });
+          throw new Unauthorized();
         }
         let playlist = await prisma.playlist.findUnique({
           where: {
@@ -90,14 +90,10 @@ export const favorites = new Elysia().group("/favorites", (app) => {
           },
         });
         if (!playlist) {
-          return new Response(null, {
-            status: 404,
-          });
+          throw new NotFound();
         }
         if (playlist.private && playlist.userId !== user.id) {
-          return new Response(null, {
-            status: 403,
-          });
+          throw new Forbidden();
         }
 
         let userData = await prisma.user.update({
@@ -137,9 +133,7 @@ export const favorites = new Elysia().group("/favorites", (app) => {
       "/:assetId",
       async ({ user, session, params: { assetId } }) => {
         if (!user || !session) {
-          return new Response(null, {
-            status: 401,
-          });
+          throw new Unauthorized();
         }
         let playlist = await prisma.playlist.findUnique({
           where: {
@@ -147,14 +141,10 @@ export const favorites = new Elysia().group("/favorites", (app) => {
           },
         });
         if (!playlist) {
-          return new Response(null, {
-            status: 404,
-          });
+          throw new NotFound();
         }
         if (playlist.private && playlist.userId !== user.id) {
-          return new Response(null, {
-            status: 403,
-          });
+          throw new Forbidden();
         }
 
         let userData = await prisma.user.update({

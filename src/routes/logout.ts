@@ -1,6 +1,7 @@
 import Elysia from "elysia";
 import { authApp } from "../middleware";
 import { lucia } from "../lucia";
+import { Unauthorized } from "../lib/errors";
 
 export const logout = new Elysia()
   .use(authApp)
@@ -8,9 +9,7 @@ export const logout = new Elysia()
     "/logout",
     async ({ user, session, cookie, set, query: { redirectUrl } }) => {
       if (!user || !session) {
-        return new Response(null, {
-          status: 401,
-        });
+        throw new Unauthorized();
       }
       await lucia.invalidateSession(session.id);
       const sessionCookie = lucia.createBlankSessionCookie();

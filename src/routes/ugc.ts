@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { authApp } from "../middleware";
 import { load } from "cheerio";
 import { getSpartanToken } from "../authTools";
-import { prisma } from "../prisma";
+import prisma from "../prisma";
 
 export const maps = new Elysia().group("/ugc", (app) => {
   return app
@@ -44,7 +44,8 @@ export const maps = new Elysia().group("/ugc", (app) => {
           tags,
           searchTerm,
           gamertag,
-          ownerOnly,
+          ownerOnly = false,
+          recommendedOnly = false,
         },
       }) => {
         const whereOptions: any = {};
@@ -80,6 +81,9 @@ export const maps = new Elysia().group("/ugc", (app) => {
               },
             };
           }
+        }
+        if (recommendedOnly === true) {
+          whereOptions.recommended = true;
         }
 
         const [data, totalCount] = await prisma.ugc.findManyAndCount({
@@ -145,7 +149,12 @@ export const maps = new Elysia().group("/ugc", (app) => {
             tags: t.String(),
             searchTerm: t.String(),
             gamertag: t.String(),
-            ownerOnly: t.Boolean(),
+            ownerOnly: t.Boolean({
+              default: false,
+            }),
+            recommendedOnly: t.Boolean({
+              default: false,
+            }),
           }),
         ),
       },
