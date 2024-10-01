@@ -174,19 +174,20 @@ export const login = new Elysia().group("/login", (app) => {
                 value: sessionCookie.value,
                 ...sessionCookie.attributes,
               });
+              //TODO: dont store oauth until we confirm we can do things such as importing peoples bookmarks, or complex stuff with infinite api
 
-              await prisma.oauth.update({
-                where: {
-                  userId: existingUser.id,
-                },
-                data: {
-                  spartanToken: xboxUser.spartanToken.SpartanToken,
-                  spartanTokenExpiresAt:
-                    xboxUser.spartanToken.ExpiresUtc.ISO8601Date,
-                  refreshToken: xboxUser.refreshToken,
-                  clearanceToken: xboxUser.clearanceToken,
-                },
-              });
+              // await prisma.oauth.update({
+              //   where: {
+              //     userId: existingUser.id,
+              //   },
+              //   data: {
+              //     spartanToken: xboxUser.spartanToken.SpartanToken,
+              //     spartanTokenExpiresAt:
+              //       xboxUser.spartanToken.ExpiresUtc.ISO8601Date,
+              //     refreshToken: xboxUser.refreshToken,
+              //     clearanceToken: xboxUser.clearanceToken,
+              //   },
+              // });
 
               set.status = 302;
               set.redirect = redirectUrl.toString();
@@ -208,16 +209,18 @@ export const login = new Elysia().group("/login", (app) => {
               },
             });
 
-            await prisma.oauth.create({
-              data: {
-                userId: userId,
-                spartanToken: xboxUser.spartanToken.SpartanToken,
-                spartanTokenExpiresAt:
-                  xboxUser.spartanToken.ExpiresUtc.ISO8601Date,
-                refreshToken: xboxUser.refreshToken,
-                clearanceToken: xboxUser.clearanceToken,
-              },
-            });
+            //TODO: dont store oauth until we confirm we can do things such as importing peoples bookmarks, or complex stuff with infinite api
+
+            // await prisma.oauth.create({
+            //   data: {
+            //     userId: userId,
+            //     spartanToken: xboxUser.spartanToken.SpartanToken,
+            //     spartanTokenExpiresAt:
+            //       xboxUser.spartanToken.ExpiresUtc.ISO8601Date,
+            //     refreshToken: xboxUser.refreshToken,
+            //     clearanceToken: xboxUser.clearanceToken,
+            //   },
+            // });
 
             const session = await lucia.createSession(userId, {});
             const sessionCookie = lucia.createSessionCookie(session.id);
