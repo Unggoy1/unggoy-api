@@ -91,10 +91,12 @@ model Tag {
 
 model Playlist {
   assetId          String  @id @unique @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   name        String
   assetKind       Int           @db.UnsignedTinyInt @default(5)
   description String
-  thumbnailUrl  String
+  thumbnailUrl  String @default("/placeholder.webp")
   private     Boolean
   userId      String
   user        User    @relation("User", references: [id], fields: [userId], onDelete: Cascade)

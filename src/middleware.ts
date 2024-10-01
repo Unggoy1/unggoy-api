@@ -18,7 +18,9 @@ export const authApp = new Elysia().derive(
       if (
         !originHeader ||
         !hostHeader ||
-        !verifyRequestOrigin(originHeader, [hostHeader, "localhost:5173"])
+        (!verifyRequestOrigin(originHeader, [hostHeader]) &&
+          process.env.NODE_ENV !== "production" &&
+          !verifyRequestOrigin(originHeader, [hostHeader, "localhost:5173"]))
       ) {
         // console.log("we dun goofed with csrf");
         return {

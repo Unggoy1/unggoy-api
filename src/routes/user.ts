@@ -1,11 +1,10 @@
-import Elysia from "elysia";
+import { Elysia } from "elysia";
 import { authApp } from "../middleware";
-import { prisma } from "../prisma";
+import prisma from "../prisma";
+import { Unauthorized, NotFound } from "../lib/errors";
 export const user = new Elysia().use(authApp).get("/user", async (context) => {
   if (!context.user) {
-    return new Response(null, {
-      status: 401,
-    });
+    throw new Unauthorized();
   }
   const user = await prisma.user.findUnique({
     where: {
@@ -20,5 +19,8 @@ export const user = new Elysia().use(authApp).get("/user", async (context) => {
       },
     },
   });
+  if (!user) {
+    throw new NotFound();
+  }
   return user;
 });

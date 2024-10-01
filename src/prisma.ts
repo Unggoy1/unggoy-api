@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 
-export const prisma = new PrismaClient().$extends({
+const prisma = new PrismaClient().$extends({
   name: "findManyAndCount",
   model: {
     $allModels: {
@@ -16,3 +16,4 @@ export const prisma = new PrismaClient().$extends({
     },
   },
 });
+export default prisma;
