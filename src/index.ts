@@ -41,13 +41,6 @@ declare module "bun" {
 const PORT = process.env.PORT || 3000;
 export const app = new Elysia()
   .use(
-    rateLimit({
-      duration: 60000,
-      max: 1000,
-      scoping: "scoped",
-    }),
-  )
-  .use(
     cors({
       origin: process.env.CORS_URL || "localhost:5173",
       allowedHeaders: ["Content-Type", "Authorization"],
