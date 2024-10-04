@@ -1,6 +1,8 @@
 import { Elysia, t } from "elysia";
 import { authApp } from "../middleware";
 import prisma from "../prisma";
+import { rateLimit } from "elysia-rate-limit";
+import { createHash } from "crypto";
 import {
   Duplicate,
   Forbidden,
@@ -18,7 +20,10 @@ import {
   updateS3File,
   uploadToS3,
 } from "../lib/imageTools";
-
+function computeETag(updatedAt: Date): string {
+  // Use updatedAt as the basis for the ETag
+  return createHash("md5").update(updatedAt.toISOString()).digest("hex");
+}
 export const playlists = new Elysia().group("/playlist", (app) => {
   return app
     .use(authApp)
@@ -231,6 +236,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
       async ({
         user,
         session,
+        set,
         params: { playlistId },
         query: {
           assetKind,
@@ -336,7 +342,6 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             contributors: true,
           },
           omit: {
-            versionId: true,
             files: true,
             numberOfObjects: true,
             createdAt: true,
@@ -355,7 +360,14 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             tag: undefined,
           };
         });
-
+        if (playlist.private) {
+          set.headers["Cache-Control"] = "private, no-store, max-age=0";
+        } else {
+          set.headers["Cache-Control"] =
+            "public, max-age=300, stale-while-revalidate=600";
+          set.headers["ETag"] = computeETag(playlist.updatedAt);
+          set.headers["Last-Modified"] = playlist.updatedAt.toUTCString();
+        }
         return {
           totalCount: totalCount,
           pageSize: count,
@@ -364,6 +376,11 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         };
       },
       {
+        params: t.Object({
+          playlistId: t.String({
+            format: "uuid",
+          }),
+        }),
         query: t.Partial(
           t.Object({
             assetKind: t.Numeric(),
@@ -389,6 +406,13 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         ),
       },
     )
+    .use(
+      rateLimit({
+        duration: 60000,
+        max: 2,
+        scoping: "scoped",
+      }),
+    )
     .put(
       "/:playlistId/",
       async ({
@@ -399,6 +423,9 @@ export const playlists = new Elysia().group("/playlist", (app) => {
       }) => {
         if (!user || !session) {
           throw new Unauthorized();
+        }
+        if (!name && !description && isPrivate === undefined && !thumbnail) {
+          throw new Validation();
         }
         let playlist = await prisma.playlist.findUnique({
           where: {
@@ -418,6 +445,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
               userId: user.id,
               name: name,
             },
+            versionId: playlist.versionId + 1,
           });
           if (existingPlaylist) {
             throw new Duplicate();
@@ -535,7 +563,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
     .get(
       "/browse",
       async ({
-        user,
+        set,
         query: {
           sort = "name",
           order = "desc",
@@ -572,6 +600,8 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           skip: offset,
         });
 
+        set.headers["Cache-Control"] =
+          "public, max-age=300, stale-while-revalidate=600";
         return { totalCount: totalCount, pageSize: count, assets: data };
       },
       {
@@ -602,6 +632,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
       async ({
         user,
         session,
+        set,
         query: {
           sort = "name",
           order = "desc",
@@ -636,6 +667,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
           skip: offset,
         });
 
+        set.headers["Cache-Control"] = "private, no-store, max-age=0";
         return { totalCount: totalCount, pageSize: count, assets: data };
       },
       {

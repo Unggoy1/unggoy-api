@@ -41,8 +41,15 @@ declare module "bun" {
 const PORT = process.env.PORT || 3000;
 export const app = new Elysia()
   .use(
+    rateLimit({
+      duration: 60000,
+      max: 1000,
+      scoping: "scoped",
+    }),
+  )
+  .use(
     cors({
-      origin: process.env.CORS_URL || "localhost:5173", //TODO properly fix this and use ENV or replace this entirely
+      origin: process.env.CORS_URL || "localhost:5173",
       allowedHeaders: ["Content-Type", "Authorization"],
       methods: ["GET", "PUT", "POST", "DELETE"],
       credentials: true,
@@ -50,7 +57,7 @@ export const app = new Elysia()
   )
   .use(
     cron({
-      name: "waypointSyncJob",
+      name: "CleanSessions",
       pattern: Patterns.EVERY_DAY_AT_6AM,
       run: async () => {
         const date = new Date();

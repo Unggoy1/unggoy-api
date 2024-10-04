@@ -22,5 +22,6 @@ export const user = new Elysia().use(authApp).get("/user", async (context) => {
   if (!user) {
     throw new NotFound();
   }
+  context.set.headers["Cache-Control"] = "private, no-store, max-age=0";
   return user;
 });

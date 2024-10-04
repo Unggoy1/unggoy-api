@@ -19,6 +19,7 @@ export const logout = new Elysia()
       });
 
       //redirect back to login page
+      set.headers["Cache-Control"] = "private, no-store, max-age=0";
       set.redirect = redirectUrl;
       return;
     },

@@ -71,6 +71,7 @@ export const login = new Elysia().group("/login", (app) => {
             path: "/",
             maxAge: 60 * 60,
           });
+          set.headers["Cache-Control"] = "private, no-store, max-age=0";
           set.status = 302;
           set.redirect = authorizationUrl.toString();
         },
@@ -189,6 +190,7 @@ export const login = new Elysia().group("/login", (app) => {
               //   },
               // });
 
+              set.headers["Cache-Control"] = "private, no-store, max-age=0";
               set.status = 302;
               set.redirect = redirectUrl.toString();
               return;
@@ -231,6 +233,7 @@ export const login = new Elysia().group("/login", (app) => {
             //TODO Look at the sessionCookie.attrubute
             //TODO See what attributes should be used for spartan token cookie
             //TODO See how we can refresh this spartan token as long as our session is active
+            set.headers["Cache-Control"] = "private, no-store, max-age=0";
             set.status = 302;
             set.redirect = redirectUrl.toString();
             return;

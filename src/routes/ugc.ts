@@ -6,35 +6,40 @@ import prisma from "../prisma";
 
 export const maps = new Elysia().group("/ugc", (app) => {
   return app
-    .get("/asset/:assetId", async ({ params: { assetId } }) => {
-      const asset = await prisma.ugc.findUniqueOrThrow({
-        where: { assetId },
-        include: {
-          tag: {
-            select: {
-              name: true,
+    .get(
+      "/asset/:assetId/:versionId",
+      async ({ params: { assetId, versionId }, set }) => {
+        const asset = await prisma.ugc.findUniqueOrThrow({
+          where: { assetId, versionId },
+          include: {
+            tag: {
+              select: {
+                name: true,
+              },
             },
+            contributors: true,
           },
-          contributors: true,
-        },
-      });
+        });
 
-      const filteredAsset: any = {
-        ...asset,
-        tags: asset.tag.map((t) => t.name),
-      };
+        const filteredAsset: any = {
+          ...asset,
+          tags: asset.tag.map((t) => t.name),
+        };
 
-      filteredAsset.files.fileRelativePaths =
-        filteredAsset.files.fileRelativePaths.filter(
-          (file: string) => file.endsWith(".jpg") || file.endsWith(".png"),
-        );
-      delete filteredAsset.tag;
+        filteredAsset.files.fileRelativePaths =
+          filteredAsset.files.fileRelativePaths.filter(
+            (file: string) => file.endsWith(".jpg") || file.endsWith(".png"),
+          );
+        delete filteredAsset.tag;
 
-      return filteredAsset;
-    })
+        set.headers["Cache-Control"] = "public, max-age=31536000";
+        return filteredAsset;
+      },
+    )
     .get(
       "/browse",
       async ({
+        set,
         query: {
           assetKind,
           sort = "publishedAt",
@@ -98,7 +103,6 @@ export const maps = new Elysia().group("/ugc", (app) => {
             contributors: true,
           },
           omit: {
-            versionId: true,
             files: true,
             numberOfObjects: true,
             createdAt: true,
@@ -119,6 +123,8 @@ export const maps = new Elysia().group("/ugc", (app) => {
           };
         });
 
+        set.headers["Cache-Control"] =
+          "public, max-age=1800, stale-while-revalidate=60";
         return { totalCount: totalCount, pageSize: count, assets: assets };
 
         // const results = {
