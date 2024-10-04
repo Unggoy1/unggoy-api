@@ -19,6 +19,7 @@ export const favorites = new Elysia().group("/favorites", (app) => {
           searchTerm,
           gamertag,
         },
+        set,
       }) => {
         if (!user || !session) {
           throw new Unauthorized();
@@ -52,7 +53,7 @@ export const favorites = new Elysia().group("/favorites", (app) => {
           take: count,
           skip: offset,
         });
-
+        set.headers["Cache-Control"] = "private, no-store, max-age=0";
         return { totalCount: totalCount, pageSize: count, assets: data };
       },
       {
