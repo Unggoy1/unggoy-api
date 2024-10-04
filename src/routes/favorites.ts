@@ -59,10 +59,17 @@ export const favorites = new Elysia().group("/favorites", (app) => {
       {
         query: t.Partial(
           t.Object({
-            sort: t.String({
-              default: "name",
-            }),
-            order: t.String({
+            sort: t.Union(
+              [
+                t.Literal("updatedAt"),
+                t.Literal("name"),
+                t.Literal("favorites"),
+              ],
+              {
+                default: "updatedAt",
+              },
+            ),
+            order: t.Union([t.Literal("desc"), t.Literal("asc")], {
               default: "desc",
             }),
             count: t.Numeric({

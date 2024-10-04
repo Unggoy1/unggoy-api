@@ -138,10 +138,20 @@ export const maps = new Elysia().group("/ugc", (app) => {
         query: t.Partial(
           t.Object({
             assetKind: t.Numeric(),
-            sort: t.String({
-              default: "publishedAt",
-            }),
-            order: t.String({
+            sort: t.Union(
+              [
+                t.Literal("publishedAt"),
+                t.Literal("name"),
+                t.Literal("averageRating"),
+                t.Literal("bookmarks"),
+                t.Literal("playsRecent"),
+                t.Literal("playsAllTime"),
+              ],
+              {
+                default: "publishedAt",
+              },
+            ),
+            order: t.Union([t.Literal("desc"), t.Literal("asc")], {
               default: "desc",
             }),
             count: t.Numeric({
