@@ -406,13 +406,6 @@ export const playlists = new Elysia().group("/playlist", (app) => {
         ),
       },
     )
-    .use(
-      rateLimit({
-        duration: 60000,
-        max: 2,
-        scoping: "scoped",
-      }),
-    )
     .put(
       "/:playlistId/",
       async ({
@@ -445,7 +438,6 @@ export const playlists = new Elysia().group("/playlist", (app) => {
               userId: user.id,
               name: name,
             },
-            versionId: playlist.versionId + 1,
           });
           if (existingPlaylist) {
             throw new Duplicate();
