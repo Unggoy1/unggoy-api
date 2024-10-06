@@ -3,13 +3,14 @@ import { authApp } from "../middleware";
 import { load } from "cheerio";
 import { getSpartanToken } from "../authTools";
 import prisma from "../prisma";
+import { NotFound } from "../lib/errors";
 
 export const maps = new Elysia().group("/ugc", (app) => {
   return app
     .get(
       "/asset/:assetId/:versionId",
       async ({ params: { assetId, versionId }, set }) => {
-        const asset = await prisma.ugc.findUniqueOrThrow({
+        const asset = await prisma.ugc.findUnique({
           where: { assetId, versionId },
           include: {
             tag: {
@@ -20,6 +21,9 @@ export const maps = new Elysia().group("/ugc", (app) => {
             contributors: true,
           },
         });
+        if (!asset) {
+          throw new NotFound();
+        }
 
         const filteredAsset: any = {
           ...asset,

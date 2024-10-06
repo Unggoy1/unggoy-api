@@ -1,6 +1,26 @@
 import { Prisma, PrismaClient } from "@prisma/client";
+import { createSoftDeleteMiddleware } from "prisma-soft-delete-middleware";
 
-const prisma = new PrismaClient().$extends({
+// Initialize the Prisma Client
+const client = new PrismaClient();
+
+// Apply the soft delete middleware
+client.$use(
+  createSoftDeleteMiddleware({
+    models: {
+      Ugc: {
+        field: "deletedAt",
+        createValue: (deleted) => {
+          if (deleted) return new Date();
+          return null;
+        },
+      },
+    },
+  }),
+);
+
+// Extend the Prisma Client
+const prisma = client.$extends({
   name: "findManyAndCount",
   model: {
     $allModels: {
@@ -16,4 +36,5 @@ const prisma = new PrismaClient().$extends({
     },
   },
 });
+
 export default prisma;
