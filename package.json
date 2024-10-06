@@ -1,6 +1,6 @@
 {
   "name": "unggoy-api",
-  "version": "1.0.50",
+  "version": "0.7.4",
   "scripts": {
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
@@ -30,6 +30,7 @@
     "nsfwjs": "^4.1.0",
     "oslo": "^0.24.0",
     "prisma": "^5.19.1",
+    "prisma-soft-delete-middleware": "^1.3.1",
     "sharp": "^0.33.5"
   },
   "devDependencies": {
