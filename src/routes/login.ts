@@ -153,7 +153,6 @@ export const login = new Elysia().group("/login", (app) => {
                 oid: user.oid,
               },
             });
-            console.log("USER: ", user);
             if (existingUser) {
               if (
                 existingUser.username !== xboxUser.gamertag ||
