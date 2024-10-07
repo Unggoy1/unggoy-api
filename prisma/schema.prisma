@@ -72,6 +72,7 @@ model Ugc {
   authorId        String
   tag             Tag[]
   playlist        Playlist[]
+  deletedAt DateTime?
 }
 
 model Contributor {
