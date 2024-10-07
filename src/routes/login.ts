@@ -46,7 +46,7 @@ export const login = new Elysia().group("/login", (app) => {
             state,
             codeVerifier,
             {
-              scopes: ["Xboxlive.signin", "Xboxlive.offline_access"],
+              scopes: ["Xboxlive.signin", "Xboxlive.offline_access", "profile"],
             },
           );
 
@@ -104,7 +104,9 @@ export const login = new Elysia().group("/login", (app) => {
             storedState !== state ||
             typeof code !== "string" ||
             !storedState ||
-            typeof storedState !== "string"
+            typeof storedState !== "string" ||
+            !codeVerifier ||
+            !redirect_url.value
           ) {
             set.status = 400;
             return;
@@ -151,7 +153,7 @@ export const login = new Elysia().group("/login", (app) => {
                 oid: user.oid,
               },
             });
-
+            console.log("USER: ", user);
             if (existingUser) {
               if (
                 existingUser.username !== xboxUser.gamertag ||
