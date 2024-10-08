@@ -169,10 +169,10 @@ export const maps = new Elysia().group("/ugc", (app) => {
             tags: t.String(),
             searchTerm: t.String(),
             gamertag: t.String(),
-            ownerOnly: t.Boolean({
+            ownerOnly: t.BooleanString({
               default: false,
             }),
-            recommendedOnly: t.Boolean({
+            recommendedOnly: t.BooleanString({
               default: false,
             }),
           }),

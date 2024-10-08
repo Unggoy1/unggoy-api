@@ -411,7 +411,7 @@ export const playlists = new Elysia().group("/playlist", (app) => {
             tags: t.String(),
             searchTerm: t.String(),
             gamertag: t.String(),
-            ownerOnly: t.Boolean(),
+            ownerOnly: t.BooleanString(),
           }),
         ),
       },

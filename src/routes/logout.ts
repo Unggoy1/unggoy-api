@@ -1,9 +1,11 @@
 import Elysia from "elysia";
 import { authApp } from "../middleware";
 import { lucia } from "../lucia";
-import { Unauthorized } from "../lib/errors";
+import { TooManyRequests, Unauthorized } from "../lib/errors";
+import { rateLimit } from "elysia-rate-limit";
 
 export const logout = new Elysia()
+  .use(rateLimit({ scoping: "scoped", errorResponse: new TooManyRequests() }))
   .use(authApp)
   .get(
     "/logout",
