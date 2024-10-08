@@ -40,7 +40,6 @@ declare module "bun" {
 
 const PORT = process.env.PORT || 3000;
 export const app = new Elysia()
-  .use(rateLimit())
   .use(
     cors({
       origin: process.env.CORS_URL || "localhost:5173",
@@ -76,6 +75,7 @@ export const app = new Elysia()
     if (customErrors.includes(code)) return error;
     return new Error(error.toString());
   })
+  .use(rateLimit())
   .get("/", () => "Hello Elysia")
   .use(maps)
   .use(login)
