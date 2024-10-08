@@ -308,8 +308,8 @@ export const playlists = new Elysia()
             skip: offset,
           });
 
-          set.headers["Cache-Control"] =
-            "public, max-age=300, stale-while-revalidate=600";
+          // set.headers["Cache-Control"] =
+          //   "public, max-age=300, stale-while-revalidate=600";
           return { totalCount: totalCount, pageSize: count, assets: data };
         },
         {
