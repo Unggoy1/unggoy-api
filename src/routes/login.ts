@@ -140,12 +140,6 @@ export const login = new Elysia()
                 throw new Error("Xbox Authentication Error");
               }
 
-              const approvedGamertag = await prisma.betaAccess.findUnique({
-                where: {
-                  gamertag: xboxUser.gamertag,
-                },
-              });
-
               const headers: HeadersInit = {
                 "X-343-Authorization-Spartan":
                   xboxUser.spartanToken.SpartanToken,
@@ -155,18 +149,6 @@ export const login = new Elysia()
               appearance.emblemPath = appearance.emblemPath.startsWith("/")
                 ? appearance.emblemPath
                 : "/" + appearance.emblemPath;
-
-              const redirectUrl = new URL(redirect_url.value);
-              if (redirectUrl.searchParams.has("error")) {
-                redirectUrl.searchParams.delete("error");
-              }
-              if (!approvedGamertag) {
-                redirectUrl.searchParams.append("error", "unauthorized");
-                set.status = 403;
-                console.log("We are not approved to login?");
-                set.redirect = redirectUrl.toString();
-                return;
-              }
 
               const existingUser = await prisma.user.findFirst({
                 where: {
