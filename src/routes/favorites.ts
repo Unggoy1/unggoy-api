@@ -1,12 +1,147 @@
 import { Elysia, t } from "elysia";
 import { authApp } from "../middleware";
 import prisma from "../prisma";
-import { Forbidden, NotFound, Unauthorized } from "../lib/errors";
+import {
+  Forbidden,
+  NotFound,
+  TooManyRequests,
+  Unauthorized,
+} from "../lib/errors";
+import { rateLimit } from "elysia-rate-limit";
+import { cloudflareGenerator } from "../lib/rateLimit";
+import { server } from "..";
 
-export const favorites = new Elysia().group("/favorites", (app) => {
-  return app
-    .use(authApp)
-    .get(
+export const favorites = new Elysia()
+  .use(
+    rateLimit({
+      scoping: "scoped",
+      errorResponse: new TooManyRequests(),
+      max: 50,
+      generator: cloudflareGenerator,
+      injectServer: () => {
+        return server!;
+      },
+    }),
+  )
+  .group("/favorites", (app) => {
+    return app
+      .use(authApp)
+      .post(
+        "/:assetId",
+        async ({ user, session, params: { assetId } }) => {
+          if (!user || !session) {
+            throw new Unauthorized();
+          }
+          let playlist = await prisma.playlist.findUnique({
+            where: {
+              assetId: assetId,
+            },
+          });
+          if (!playlist) {
+            throw new NotFound();
+          }
+          if (playlist.private && playlist.userId !== user.id) {
+            throw new Forbidden();
+          }
+
+          let userData = await prisma.user.update({
+            where: {
+              id: user.id,
+            },
+            data: {
+              favorites: {
+                connect: {
+                  assetId,
+                },
+              },
+            },
+            omit: {
+              oid: true,
+              xuid: true,
+              serviceTag: true,
+              emblemPath: true,
+            },
+
+            include: {
+              favorites: true,
+            },
+          });
+
+          return userData;
+        },
+        {
+          params: t.Object({
+            assetId: t.String({
+              format: "uuid",
+            }),
+          }),
+        },
+      )
+      .delete(
+        "/:assetId",
+        async ({ user, session, params: { assetId } }) => {
+          if (!user || !session) {
+            throw new Unauthorized();
+          }
+          let playlist = await prisma.playlist.findUnique({
+            where: {
+              assetId: assetId,
+            },
+          });
+          if (!playlist) {
+            throw new NotFound();
+          }
+          if (playlist.private && playlist.userId !== user.id) {
+            throw new Forbidden();
+          }
+
+          let userData = await prisma.user.update({
+            where: {
+              id: user.id,
+            },
+            data: {
+              favorites: {
+                disconnect: {
+                  assetId,
+                },
+              },
+            },
+            omit: {
+              oid: true,
+              xuid: true,
+              serviceTag: true,
+              emblemPath: true,
+            },
+            include: {
+              favorites: true,
+            },
+          });
+
+          return userData;
+        },
+        {
+          params: t.Object({
+            assetId: t.String({
+              format: "uuid",
+            }),
+          }),
+        },
+      );
+  });
+export const favorites2 = new Elysia()
+  .use(
+    rateLimit({
+      scoping: "scoped",
+      errorResponse: new TooManyRequests(),
+      max: 100,
+      generator: cloudflareGenerator,
+      injectServer: () => {
+        return server!;
+      },
+    }),
+  )
+  .group("/favorites", (app) => {
+    return app.use(authApp).get(
       "/",
       async ({
         user,
@@ -85,106 +220,5 @@ export const favorites = new Elysia().group("/favorites", (app) => {
           }),
         ),
       },
-    )
-    .post(
-      "/:assetId",
-      async ({ user, session, params: { assetId } }) => {
-        if (!user || !session) {
-          throw new Unauthorized();
-        }
-        let playlist = await prisma.playlist.findUnique({
-          where: {
-            assetId: assetId,
-          },
-        });
-        if (!playlist) {
-          throw new NotFound();
-        }
-        if (playlist.private && playlist.userId !== user.id) {
-          throw new Forbidden();
-        }
-
-        let userData = await prisma.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            favorites: {
-              connect: {
-                assetId,
-              },
-            },
-          },
-          omit: {
-            oid: true,
-            xuid: true,
-            serviceTag: true,
-            emblemPath: true,
-          },
-
-          include: {
-            favorites: true,
-          },
-        });
-
-        return userData;
-      },
-      {
-        params: t.Object({
-          assetId: t.String({
-            format: "uuid",
-          }),
-        }),
-      },
-    )
-    .delete(
-      "/:assetId",
-      async ({ user, session, params: { assetId } }) => {
-        if (!user || !session) {
-          throw new Unauthorized();
-        }
-        let playlist = await prisma.playlist.findUnique({
-          where: {
-            assetId: assetId,
-          },
-        });
-        if (!playlist) {
-          throw new NotFound();
-        }
-        if (playlist.private && playlist.userId !== user.id) {
-          throw new Forbidden();
-        }
-
-        let userData = await prisma.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            favorites: {
-              disconnect: {
-                assetId,
-              },
-            },
-          },
-          omit: {
-            oid: true,
-            xuid: true,
-            serviceTag: true,
-            emblemPath: true,
-          },
-          include: {
-            favorites: true,
-          },
-        });
-
-        return userData;
-      },
-      {
-        params: t.Object({
-          assetId: t.String({
-            format: "uuid",
-          }),
-        }),
-      },
     );
-});
+  });

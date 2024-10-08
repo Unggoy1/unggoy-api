@@ -3,9 +3,19 @@ import { authApp } from "../middleware";
 import { lucia } from "../lucia";
 import { TooManyRequests, Unauthorized } from "../lib/errors";
 import { rateLimit } from "elysia-rate-limit";
+import { cloudflareGenerator } from "../lib/rateLimit";
 
 export const logout = new Elysia()
-  .use(rateLimit({ scoping: "scoped", errorResponse: new TooManyRequests() }))
+  .use(
+    rateLimit({
+      scoping: "scoped",
+      errorResponse: new TooManyRequests(),
+      generator: cloudflareGenerator,
+      injectServer: () => {
+        return server!;
+      },
+    }),
+  )
   .use(authApp)
   .get(
     "/logout",

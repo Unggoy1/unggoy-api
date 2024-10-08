@@ -3,183 +3,198 @@ import { authApp } from "../middleware";
 import { load } from "cheerio";
 import { getSpartanToken } from "../authTools";
 import prisma from "../prisma";
-import { NotFound } from "../lib/errors";
+import { NotFound, TooManyRequests } from "../lib/errors";
+import { rateLimit } from "elysia-rate-limit";
+import { cloudflareGenerator } from "../lib/rateLimit";
+import { server } from "..";
 
-export const maps = new Elysia().group("/ugc", (app) => {
-  return app
-    .get(
-      "/asset/:assetId/:versionId",
-      async ({ params: { assetId, versionId }, set }) => {
-        const asset = await prisma.ugc.findUnique({
-          where: { assetId, versionId },
-          include: {
-            tag: {
-              select: {
-                name: true,
-              },
-            },
-            contributors: true,
-          },
-        });
-        if (!asset) {
-          throw new NotFound();
-        }
-
-        const filteredAsset: any = {
-          ...asset,
-          tags: asset.tag.map((t) => t.name),
-        };
-
-        filteredAsset.files.fileRelativePaths =
-          filteredAsset.files.fileRelativePaths.filter(
-            (file: string) => file.endsWith(".jpg") || file.endsWith(".png"),
-          );
-        delete filteredAsset.tag;
-
-        set.headers["Cache-Control"] = "public, max-age=31536000";
-        return filteredAsset;
+export const maps = new Elysia()
+  .use(
+    rateLimit({
+      scoping: "scoped",
+      errorResponse: new TooManyRequests(),
+      max: 100,
+      generator: cloudflareGenerator,
+      injectServer: () => {
+        return server!;
       },
-    )
-    .get(
-      "/browse",
-      async ({
-        set,
-        query: {
-          assetKind,
-          sort = "publishedAt",
-          order = "desc",
-          count = 20,
-          offset = 0,
-          tags,
-          searchTerm,
-          gamertag,
-          ownerOnly = false,
-          recommendedOnly = false,
-        },
-      }) => {
-        const whereOptions: any = {};
-
-        if (searchTerm) {
-          whereOptions.name = {
-            contains: searchTerm,
-          };
-        }
-        if (assetKind) {
-          whereOptions.assetKind = assetKind;
-        }
-        if (tags) {
-          whereOptions.tag = {
-            some: {
-              name: {
-                in: [tags],
+    }),
+  )
+  .group("/ugc", (app) => {
+    return app
+      .get(
+        "/asset/:assetId/:versionId",
+        async ({ params: { assetId, versionId }, set }) => {
+          const asset = await prisma.ugc.findUnique({
+            where: { assetId, versionId },
+            include: {
+              tag: {
+                select: {
+                  name: true,
+                },
               },
+              contributors: true,
             },
+          });
+          if (!asset) {
+            throw new NotFound();
+          }
+
+          const filteredAsset: any = {
+            ...asset,
+            tags: asset.tag.map((t) => t.name),
           };
-        }
-        if (gamertag) {
-          if (ownerOnly) {
-            whereOptions.author = {
-              is: {
-                gamertag: gamertag,
-              },
+
+          filteredAsset.files.fileRelativePaths =
+            filteredAsset.files.fileRelativePaths.filter(
+              (file: string) => file.endsWith(".jpg") || file.endsWith(".png"),
+            );
+          delete filteredAsset.tag;
+
+          set.headers["Cache-Control"] = "public, max-age=31536000";
+          return filteredAsset;
+        },
+      )
+      .get(
+        "/browse",
+        async ({
+          set,
+          query: {
+            assetKind,
+            sort = "publishedAt",
+            order = "desc",
+            count = 20,
+            offset = 0,
+            tags,
+            searchTerm,
+            gamertag,
+            ownerOnly = false,
+            recommendedOnly = false,
+          },
+        }) => {
+          const whereOptions: any = {};
+
+          if (searchTerm) {
+            whereOptions.name = {
+              contains: searchTerm,
             };
-          } else {
-            whereOptions.contributors = {
+          }
+          if (assetKind) {
+            whereOptions.assetKind = assetKind;
+          }
+          if (tags) {
+            whereOptions.tag = {
               some: {
-                gamertag: gamertag,
+                name: {
+                  in: [tags],
+                },
               },
             };
           }
-        }
-        if (recommendedOnly === true) {
-          whereOptions.recommended = true;
-        }
+          if (gamertag) {
+            if (ownerOnly) {
+              whereOptions.author = {
+                is: {
+                  gamertag: gamertag,
+                },
+              };
+            } else {
+              whereOptions.contributors = {
+                some: {
+                  gamertag: gamertag,
+                },
+              };
+            }
+          }
+          if (recommendedOnly === true) {
+            whereOptions.recommended = true;
+          }
 
-        const [data, totalCount] = await prisma.ugc.findManyAndCount({
-          where: whereOptions,
+          const [data, totalCount] = await prisma.ugc.findManyAndCount({
+            where: whereOptions,
 
-          include: {
-            tag: {
-              select: {
-                name: true,
+            include: {
+              tag: {
+                select: {
+                  name: true,
+                },
               },
+              contributors: true,
             },
-            contributors: true,
-          },
-          omit: {
-            files: true,
-            numberOfObjects: true,
-            createdAt: true,
-            updatedAt: true,
-          },
-          orderBy: {
-            [sort]: order,
-          },
-          take: count,
-          skip: offset,
-        });
+            omit: {
+              files: true,
+              numberOfObjects: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+            orderBy: {
+              [sort]: order,
+            },
+            take: count,
+            skip: offset,
+          });
 
-        const assets = data.map((asset) => {
-          return {
-            ...asset,
-            tags: asset.tag.map((t) => t.name),
-            tag: undefined,
-          };
-        });
+          const assets = data.map((asset) => {
+            return {
+              ...asset,
+              tags: asset.tag.map((t) => t.name),
+              tag: undefined,
+            };
+          });
 
-        set.headers["Cache-Control"] =
-          "public, max-age=1800, stale-while-revalidate=60";
-        return { totalCount: totalCount, pageSize: count, assets: assets };
+          set.headers["Cache-Control"] =
+            "public, max-age=1800, stale-while-revalidate=60";
+          return { totalCount: totalCount, pageSize: count, assets: assets };
 
-        // const results = {
-        //   results: jsonContent.props?.pageProps?.results,
-        //   totalPages: jsonContent.props?.pageProps?.totalPages,
-        //   totalResults: jsonContent.props?.pageProps?.totalResults,
-        //   pageSize: jsonContent.props?.pageProps?.pageSize,
-        // };
-      },
-      {
-        query: t.Partial(
-          t.Object({
-            assetKind: t.Numeric(),
-            sort: t.Union(
-              [
-                t.Literal("publishedAt"),
-                t.Literal("name"),
-                t.Literal("averageRating"),
-                t.Literal("bookmarks"),
-                t.Literal("playsRecent"),
-                t.Literal("playsAllTime"),
-              ],
-              {
-                default: "publishedAt",
-              },
-            ),
-            order: t.Union([t.Literal("desc"), t.Literal("asc")], {
-              default: "desc",
+          // const results = {
+          //   results: jsonContent.props?.pageProps?.results,
+          //   totalPages: jsonContent.props?.pageProps?.totalPages,
+          //   totalResults: jsonContent.props?.pageProps?.totalResults,
+          //   pageSize: jsonContent.props?.pageProps?.pageSize,
+          // };
+        },
+        {
+          query: t.Partial(
+            t.Object({
+              assetKind: t.Numeric(),
+              sort: t.Union(
+                [
+                  t.Literal("publishedAt"),
+                  t.Literal("name"),
+                  t.Literal("averageRating"),
+                  t.Literal("bookmarks"),
+                  t.Literal("playsRecent"),
+                  t.Literal("playsAllTime"),
+                ],
+                {
+                  default: "publishedAt",
+                },
+              ),
+              order: t.Union([t.Literal("desc"), t.Literal("asc")], {
+                default: "desc",
+              }),
+              count: t.Numeric({
+                minimum: 1,
+                maximum: 30,
+                default: 20,
+              }),
+              offset: t.Numeric({
+                default: 0,
+              }),
+              tags: t.String(),
+              searchTerm: t.String(),
+              gamertag: t.String(),
+              ownerOnly: t.BooleanString({
+                default: false,
+              }),
+              recommendedOnly: t.BooleanString({
+                default: false,
+              }),
             }),
-            count: t.Numeric({
-              minimum: 1,
-              maximum: 30,
-              default: 20,
-            }),
-            offset: t.Numeric({
-              default: 0,
-            }),
-            tags: t.String(),
-            searchTerm: t.String(),
-            gamertag: t.String(),
-            ownerOnly: t.BooleanString({
-              default: false,
-            }),
-            recommendedOnly: t.BooleanString({
-              default: false,
-            }),
-          }),
-        ),
-      },
-    );
-});
+          ),
+        },
+      );
+  });
 
 export enum assetKind {
   Map = 2,
