@@ -4,6 +4,7 @@ import { lucia } from "../lucia";
 import { TooManyRequests, Unauthorized } from "../lib/errors";
 import { rateLimit } from "elysia-rate-limit";
 import { cloudflareGenerator } from "../lib/rateLimit";
+import { server } from "..";
 
 export const logout = new Elysia()
   .use(
