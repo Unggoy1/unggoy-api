@@ -93,7 +93,7 @@ export async function uploadToS3(
 
   try {
     const data = await b2.send(new PutObjectCommand(params));
-    console.log(`File uploaded successfully: ${data}`);
+    console.log(`File uploaded successfully:`);
     return data;
   } catch (error) {
     console.error("Error uploading to S3:", error);
@@ -113,7 +113,7 @@ export async function deleteFromS3(
 
   try {
     const data = await b2.send(new DeleteObjectCommand(params));
-    console.log(`File deleted successfully: ${key}`);
+    console.log(`File deleted successfully: `);
     return data;
   } catch (error) {
     console.error("Error deleting from S3:", error);

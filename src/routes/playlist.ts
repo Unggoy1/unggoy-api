@@ -181,7 +181,6 @@ export const playlists = new Elysia()
             set.headers["ETag"] = computeETag(playlist.updatedAt);
             set.headers["Last-Modified"] = playlist.updatedAt.toUTCString();
           }
-          console.log(playlist);
           return {
             totalCount: totalCount,
             pageSize: count,
