@@ -75,6 +75,7 @@ export const app = new Elysia()
     if (customErrors.includes(code)) return error;
     return new Error(error.toString());
   })
+  .use(rateLimit())
   .get("/", () => "Hello Elysia")
   .use(maps)
   .use(login)
