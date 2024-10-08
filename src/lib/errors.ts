@@ -53,3 +53,12 @@ export class Validation extends Error {
     super(message);
   }
 }
+
+export class TooManyRequests extends Error {
+  constructor(
+    public message: string = "Too Many Requests",
+    public status = 429,
+  ) {
+    super(message);
+  }
+}
