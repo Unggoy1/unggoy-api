@@ -130,6 +130,7 @@ export const login = new Elysia()
               set.status = 400;
               return;
             }
+            const redirectUrl = new URL(redirect_url.value);
             try {
               const tokens: MicrosoftEntraIdTokens =
                 await entraId.validateAuthorizationCode(code, codeVerifier);
@@ -192,7 +193,6 @@ export const login = new Elysia()
                 //   },
                 // });
 
-                const redirectUrl = new URL(redirect_url.value);
                 set.headers["Cache-Control"] = "private, no-store, max-age=0";
                 set.status = 302;
                 set.redirect = redirectUrl.toString();
