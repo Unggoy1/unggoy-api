@@ -74,15 +74,13 @@ export const playlists = new Elysia()
             },
           };
           if (user && session) {
-            includeOptions = {
-              favoritedBy: {
-                where: {
-                  id: user.id,
-                },
-                select: {
-                  id: true,
-                  username: true,
-                },
+            includeOptions.favoritedBy = {
+              where: {
+                id: user.id,
+              },
+              select: {
+                id: true,
+                username: true,
               },
             };
           }
@@ -176,10 +174,10 @@ export const playlists = new Elysia()
           if (playlist.private) {
             set.headers["Cache-Control"] = "private, no-store, max-age=0";
           } else {
-            set.headers["Cache-Control"] =
-              "public, max-age=300, stale-while-revalidate=600";
-            set.headers["ETag"] = computeETag(playlist.updatedAt);
-            set.headers["Last-Modified"] = playlist.updatedAt.toUTCString();
+            // set.headers["Cache-Control"] =
+            //   "public, max-age=300, stale-while-revalidate=600";
+            // set.headers["ETag"] = computeETag(playlist.updatedAt);
+            // set.headers["Last-Modified"] = playlist.updatedAt.toUTCString();
           }
           return {
             totalCount: totalCount,
