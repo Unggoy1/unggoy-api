@@ -149,7 +149,6 @@ export const login = new Elysia()
               appearance.emblemPath = appearance.emblemPath.startsWith("/")
                 ? appearance.emblemPath
                 : "/" + appearance.emblemPath;
-
               const existingUser = await prisma.user.findFirst({
                 where: {
                   oid: user.oid,
@@ -193,6 +192,7 @@ export const login = new Elysia()
                 //   },
                 // });
 
+                const redirectUrl = new URL(redirect_url.value);
                 set.headers["Cache-Control"] = "private, no-store, max-age=0";
                 set.status = 302;
                 set.redirect = redirectUrl.toString();
