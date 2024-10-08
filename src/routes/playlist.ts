@@ -62,12 +62,19 @@ export const playlists = new Elysia()
             ownerOnly,
           },
         }) => {
-          let includeOptions = {};
+          let includeOptions: any = {
+            _count: {
+              select: { favoritedBy: true },
+            },
+            user: {
+              select: {
+                username: true,
+                emblemPath: true,
+              },
+            },
+          };
           if (user && session) {
             includeOptions = {
-              _count: {
-                select: { favoritedBy: true },
-              },
               favoritedBy: {
                 where: {
                   id: user.id,
@@ -75,12 +82,6 @@ export const playlists = new Elysia()
                 select: {
                   id: true,
                   username: true,
-                },
-              },
-              user: {
-                select: {
-                  username: true,
-                  emblemPath: true,
                 },
               },
             };
@@ -180,6 +181,7 @@ export const playlists = new Elysia()
             set.headers["ETag"] = computeETag(playlist.updatedAt);
             set.headers["Last-Modified"] = playlist.updatedAt.toUTCString();
           }
+          console.log(playlist);
           return {
             totalCount: totalCount,
             pageSize: count,
