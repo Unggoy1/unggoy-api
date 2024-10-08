@@ -16,13 +16,18 @@ import { entraIdTokenPayload } from "../interface";
 import { refreshSpartanToken } from "../auth";
 import { rateLimit } from "elysia-rate-limit";
 import { TooManyRequests } from "../lib/errors";
+import { cloudflareGenerator } from "../lib/rateLimit";
+import { server } from "..";
 
 export const login = new Elysia()
   .use(
     rateLimit({
       scoping: "scoped",
-      max: 5,
       errorResponse: new TooManyRequests(),
+      generator: cloudflareGenerator,
+      injectServer: () => {
+        return server!;
+      },
     }),
   )
   .group("/login", (app) => {

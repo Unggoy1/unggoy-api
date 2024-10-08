@@ -1,15 +1,14 @@
 import { Elysia } from "elysia";
 import { authApp } from "../middleware";
 import prisma from "../prisma";
-import { Unauthorized, NotFound } from "../lib/errors";
+import { Unauthorized, NotFound, TooManyRequests } from "../lib/errors";
 import { rateLimit } from "elysia-rate-limit";
 export const user = new Elysia()
   .use(
     rateLimit({
-      duration: 60000,
-      max: 3,
-      errorResponse: new Unauthorized(),
       scoping: "scoped",
+      errorResponse: new TooManyRequests(),
+      max: 5000,
     }),
   )
   .use(authApp)

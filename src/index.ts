@@ -4,11 +4,10 @@ import { login } from "./routes/login";
 import { user } from "./routes/user";
 import { logout } from "./routes/logout";
 import { cors } from "@elysiajs/cors";
-import { playlists } from "./routes/playlist";
-import { favorites } from "./routes/favorites";
+import { playlists, playlists2, playlists3 } from "./routes/playlist";
+import { favorites, favorites2 } from "./routes/favorites";
 import { cron, Patterns } from "@elysiajs/cron";
 import { lucia } from "./lucia";
-import { rateLimit } from "elysia-rate-limit";
 import {
   Duplicate,
   Forbidden,
@@ -17,6 +16,7 @@ import {
   Unknown,
   Validation,
 } from "./lib/errors";
+import type { Server } from "bun";
 
 declare module "bun" {
   interface Env {
@@ -38,6 +38,7 @@ declare module "bun" {
   }
 }
 
+export let server: Server | null;
 const PORT = process.env.PORT || 3000;
 export const app = new Elysia()
   .use(
@@ -81,9 +82,13 @@ export const app = new Elysia()
   .use(user)
   .use(logout)
   .use(playlists)
+  .use(playlists2)
+  .use(playlists3)
   .use(favorites)
+  .use(favorites2)
   .listen(PORT);
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );
+server = app.server;
