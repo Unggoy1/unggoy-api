@@ -72,12 +72,16 @@ export const app = new Elysia()
       "VALIDATION",
     ];
     if (code === "VALIDATION") {
-      const vError: ValidationError = error;
-      if (error instanceof ValidationError) {
-        return new Validation(error.all[0].summary);
+      // if (error instanceof ValidationError) {
+      //   console.log("IAERSNTOIENARSOIT");
+      //   return new Validation(error.all[0].path);
+      // }
+      try {
+        const err = JSON.parse(error.message) ?? "hey";
+        return new Validation(err.summary);
+      } catch (err) {
+        return new Validation(error.message);
       }
-      const err = JSON.parse(error.message);
-      return new Validation(err.summary);
     }
     if (customErrors.includes(code)) return error;
     return new Error(error.toString());

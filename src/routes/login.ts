@@ -19,6 +19,8 @@ import { TooManyRequests } from "../lib/errors";
 import { cloudflareGenerator } from "../lib/rateLimit";
 import { server } from "..";
 
+let allowedDomain = process.env.CORS_URL || "localhost:5137";
+
 export const login = new Elysia()
   .use(
     rateLimit({
@@ -96,7 +98,11 @@ export const login = new Elysia()
           },
           {
             query: t.Object({
-              redirectUrl: t.String(),
+              redirectUrl: t.String({
+                format: "uri",
+                pattern: `^https?://${allowedDomain.replace(/\./g, "\\.")}(/.*)?$`,
+                error: "Invalid redirect url",
+              }),
             }),
           },
         )
