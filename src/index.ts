@@ -1,4 +1,4 @@
-import { Elysia } from "elysia";
+import { Elysia, ValidationError } from "elysia";
 import { maps } from "./routes/ugc";
 import { login } from "./routes/login";
 import { user } from "./routes/user";
@@ -62,8 +62,6 @@ export const app = new Elysia()
   )
   .error({ Unauthorized, Forbidden, NotFound, Duplicate, Unknown, Validation })
   .onError(({ code, error }) => {
-    console.log(code);
-    console.log(error);
     const customErrors = [
       "Unauthorized",
       "Forbidden",
@@ -73,6 +71,14 @@ export const app = new Elysia()
       "Validation",
       "VALIDATION",
     ];
+    if (code === "VALIDATION") {
+      const vError: ValidationError = error;
+      if (error instanceof ValidationError) {
+        return new Validation(error.all[0].summary);
+      }
+      const err = JSON.parse(error.message);
+      return new Validation(err.summary);
+    }
     if (customErrors.includes(code)) return error;
     return new Error(error.toString());
   })
