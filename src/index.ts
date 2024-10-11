@@ -76,6 +76,7 @@ export const app = new Elysia()
       //   console.log("IAERSNTOIENARSOIT");
       //   return new Validation(error.all[0].path);
       // }
+      //TODO: Find a better way to implement Typebox Validation responses
       try {
         const err = JSON.parse(error.message) ?? "hey";
         return new Validation(err.summary);
