@@ -207,12 +207,12 @@ export const favorites2 = new Elysia()
             order: t.Union([t.Literal("desc"), t.Literal("asc")], {
               default: "desc",
             }),
-            count: t.Number({
+            count: t.Numeric({
               minimum: 1,
               maximum: 30,
               default: 20,
             }),
-            offset: t.Number({
+            offset: t.Numeric({
               default: 0,
             }),
             searchTerm: t.String(),
