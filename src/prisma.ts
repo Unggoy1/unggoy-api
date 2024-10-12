@@ -1,23 +1,23 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-// import { createSoftDeleteMiddleware } from "prisma-soft-delete-middleware";
+import { createSoftDeleteMiddleware } from "prisma-soft-delete-middleware";
 
 // Initialize the Prisma Client
 const client = new PrismaClient();
 
 // Apply the soft delete middleware
-// client.$use(
-//   createSoftDeleteMiddleware({
-//     models: {
-//       Ugc: {
-//         field: "deletedAt",
-//         createValue: (deleted) => {
-//           if (deleted) return new Date();
-//           return null;
-//         },
-//       },
-//     },
-//   }),
-// );
+client.$use(
+  createSoftDeleteMiddleware({
+    models: {
+      Ugc: {
+        field: "deletedAt",
+        createValue: (deleted) => {
+          if (deleted) return new Date();
+          return null;
+        },
+      },
+    },
+  }),
+);
 
 // Extend the Prisma Client
 const prisma = client.$extends({
