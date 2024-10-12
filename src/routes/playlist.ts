@@ -23,6 +23,7 @@ import {
 } from "../lib/imageTools";
 import { cloudflareGenerator } from "../lib/rateLimit";
 import { server } from "..";
+import { validateInput } from "../lib/textTools";
 function computeETag(updatedAt: Date): string {
   // Use updatedAt as the basis for the ETag
   return createHash("md5").update(updatedAt.toISOString()).digest("hex");
@@ -443,6 +444,17 @@ export const playlists2 = new Elysia()
           if (!user || !session) {
             throw new Unauthorized();
           }
+          const nameValidation = validateInput(name, 4);
+          const descValidation = validateInput(description, 10);
+          if (!nameValidation.isValid || !descValidation.isValid) {
+            const message = !nameValidation.isValid
+              ? "Expected name to be greater than 4"
+              : "Expected description to be greater than 10";
+            throw new Validation(message);
+          }
+          name = nameValidation.sanitized;
+          description = descValidation.sanitized;
+
           // Check if user has reached playlist limit
           const playlistCount = await prisma.playlist.count({
             where: { userId: user.id },
