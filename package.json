@@ -1,6 +1,6 @@
 {
   "name": "unggoy-api",
-  "version": "0.7.4",
+  "version": "0.7.6",
   "scripts": {
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
