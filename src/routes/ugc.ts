@@ -22,39 +22,37 @@ export const maps = new Elysia()
   )
   .group("/ugc", (app) => {
     return app
-      .get(
-        "/asset/:assetId/:versionId",
-        async ({ params: { assetId, versionId }, set }) => {
-          const asset = await prisma.ugc.findUnique({
-            where: { assetId, versionId },
-            include: {
-              tag: {
-                select: {
-                  name: true,
-                },
+      .get("/asset/:assetId", async ({ params: { assetId }, set }) => {
+        const asset = await prisma.ugc.findUnique({
+          where: { assetId },
+          include: {
+            tag: {
+              select: {
+                name: true,
               },
-              contributors: true,
             },
-          });
-          if (!asset) {
-            throw new NotFound();
-          }
+            contributors: true,
+          },
+        });
+        if (!asset) {
+          throw new NotFound();
+        }
 
-          const filteredAsset: any = {
-            ...asset,
-            tags: asset.tag.map((t) => t.name),
-          };
+        const filteredAsset: any = {
+          ...asset,
+          tags: asset.tag.map((t) => t.name),
+        };
 
-          filteredAsset.files.fileRelativePaths =
-            filteredAsset.files.fileRelativePaths.filter(
-              (file: string) => file.endsWith(".jpg") || file.endsWith(".png"),
-            );
-          delete filteredAsset.tag;
+        filteredAsset.files.fileRelativePaths =
+          filteredAsset.files.fileRelativePaths.filter(
+            (file: string) => file.endsWith(".jpg") || file.endsWith(".png"),
+          );
+        delete filteredAsset.tag;
 
-          set.headers["Cache-Control"] = "public, max-age=31536000";
-          return filteredAsset;
-        },
-      )
+        set.headers["Cache-Control"] =
+          "public, max-age=1800, stale-while-revalidate=60";
+        return filteredAsset;
+      })
       .get(
         "/browse",
         async ({
