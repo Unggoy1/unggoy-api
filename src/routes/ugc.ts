@@ -68,8 +68,10 @@ export const maps = new Elysia()
             gamertag,
             ownerOnly = false,
             recommendedOnly = false,
+            hide343Assets = false,
           },
         }) => {
+          //TODO: REFACTOR THIS Endpoint. I feel like there are too many query params
           const whereOptions: any = {};
 
           if (searchTerm) {
@@ -89,6 +91,13 @@ export const maps = new Elysia()
               },
             };
           }
+          if (hide343Assets) {
+            whereOptions.contributors = {
+              none: {
+                xuid: "343",
+              },
+            };
+          }
           if (gamertag) {
             if (ownerOnly) {
               whereOptions.author = {
@@ -98,6 +107,7 @@ export const maps = new Elysia()
               };
             } else {
               whereOptions.contributors = {
+                ...whereOptions.contributors,
                 some: {
                   gamertag: gamertag,
                 },
@@ -186,6 +196,9 @@ export const maps = new Elysia()
                 default: false,
               }),
               recommendedOnly: t.BooleanString({
+                default: false,
+              }),
+              hide343Assets: t.BooleanString({
                 default: false,
               }),
             }),
