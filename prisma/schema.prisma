@@ -57,7 +57,7 @@ model Ugc {
   bookmarks       Int           @db.UnsignedInt
   playsRecent     Int           @db.UnsignedInt
   playsAllTime    Int           @db.UnsignedInt
-  averageRating   Int           @db.UnsignedTinyInt
+  averageRating   Decimal       @db.Decimal(3, 2)
   numberOfRatings Int           @db.UnsignedInt
   createdAt       DateTime
   updatedAt       DateTime
