@@ -65,7 +65,7 @@ export const playlists = new Elysia()
         }) => {
           let includeOptions: any = {
             _count: {
-              select: { favoritedBy: true },
+              select: { favoritedBy: true, ugc: true },
             },
             user: {
               select: {
