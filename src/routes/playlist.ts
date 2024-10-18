@@ -274,7 +274,7 @@ export const playlists = new Elysia()
         async ({
           set,
           query: {
-            sort = "name",
+            sort = "updatedAt",
             order = "desc",
             count = 20,
             offset = 0,
