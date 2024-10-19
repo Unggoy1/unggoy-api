@@ -134,6 +134,9 @@ export const login = new Elysia()
               !redirect_url.value
             ) {
               set.status = 400;
+              entra_oauth_state.remove();
+              entra_oauth_verifier.remove();
+              redirect_url.remove();
               return;
             }
             const redirectUrl = new URL(redirect_url.value);
@@ -199,6 +202,9 @@ export const login = new Elysia()
                 //   },
                 // });
 
+                entra_oauth_state.remove();
+                entra_oauth_verifier.remove();
+                redirect_url.remove();
                 set.headers["Cache-Control"] = "private, no-store, max-age=0";
                 set.status = 302;
                 set.redirect = redirectUrl.toString();
@@ -233,6 +239,9 @@ export const login = new Elysia()
               //   },
               // });
 
+              entra_oauth_state.remove();
+              entra_oauth_verifier.remove();
+              redirect_url.remove();
               const session = await lucia.createSession(userId, {});
               const sessionCookie = lucia.createSessionCookie(session.id);
               auth_session.set({
@@ -248,6 +257,9 @@ export const login = new Elysia()
               return;
             } catch (error) {
               console.error(error);
+              entra_oauth_state.remove();
+              entra_oauth_verifier.remove();
+              redirect_url.remove();
               if (error instanceof OAuth2RequestError) {
                 set.status = 400;
                 return;
