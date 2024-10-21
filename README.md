@@ -1,6 +1,6 @@
 # Unggoy Api
 
-![Static Badge](https://img.shields.io/badge/Discord-%235865F2?style=flat&logo=discord&logoColor=%23FFFFFF&link=https%3A%2F%2Fdiscord.gg%2FxnwFA4z2HA)
+[Discord Server](https://discord.gg/xnwFA4z2HA)
 
 The backend service for Unggoy Web which is a website to browse Halo Infinite user generated content, and create playlists out of the UGC.
 
