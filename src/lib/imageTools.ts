@@ -93,7 +93,6 @@ export async function uploadToS3(
 
   try {
     const data = await b2.send(new PutObjectCommand(params));
-    console.log(`File uploaded successfully:`);
     return data;
   } catch (error) {
     console.error("Error uploading to S3:", error);
@@ -113,7 +112,6 @@ export async function deleteFromS3(
 
   try {
     const data = await b2.send(new DeleteObjectCommand(params));
-    console.log(`File deleted successfully: `);
     return data;
   } catch (error) {
     console.error("Error deleting from S3:", error);
@@ -136,7 +134,6 @@ export async function updateS3File(
     if (oldKey) {
       await deleteFromS3(bucketName, oldKey);
     } else {
-      console.log("No existing file to delete.");
     }
 
     // Upload the new file

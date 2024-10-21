@@ -662,7 +662,6 @@ export const playlists3 = new Elysia()
       .post(
         "/:playlistId/asset/:assetId",
         async ({ user, session, params: { playlistId, assetId } }) => {
-          console.log("adding to existing baby");
           if (!user || !session) {
             throw new Unauthorized();
           }
