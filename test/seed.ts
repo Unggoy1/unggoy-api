@@ -54,7 +54,7 @@ export async function seedDatabase() {
 }
 
 export async function resetDatabase() {
-  const deleteAssets = prisma.ugc.deleteMany();
+  const deleteAssets = prisma.$executeRawUnsafe("DELETE FROM Ugc");
   const deleteTags = prisma.tag.deleteMany({});
   const deleteContributors = prisma.contributor.deleteMany();
   const deletePlaylists = prisma.playlist.deleteMany();
@@ -67,7 +67,6 @@ export async function resetDatabase() {
     deleteUsers,
     deletePlaylists,
   ]);
-
   await prisma.$disconnect();
 }
 
@@ -76,3 +75,30 @@ export async function getUserSession() {
   const sessionCookie = lucia.createSessionCookie(session.id);
   return { session: session, sessionCookie: sessionCookie };
 }
+
+function createFile(
+  name: string,
+  type: string,
+  content: string | Buffer,
+): File {
+  return new File([content], name, { type });
+}
+
+// Create a PNG image File
+const pngImageContent = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==",
+  "base64",
+);
+export const imageFile = createFile(
+  "test-image.png",
+  "image/png",
+  pngImageContent,
+);
+
+// Create a non-image File (text file in this case)
+const textFileContent = "This is a test text file.";
+export const textFile = createFile(
+  "test-file.txt",
+  "text/plain",
+  textFileContent,
+);
