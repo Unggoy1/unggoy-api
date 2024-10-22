@@ -23,11 +23,19 @@ Install dependencies
   bun install
 ```
 
+Run the database migrations
+
+```bash
+  bunx prisma migrate dev
+```
+
 Start the server
 
 ```bash
   bun run dev
 ```
+
+-
 
 ## Environment Variables
 

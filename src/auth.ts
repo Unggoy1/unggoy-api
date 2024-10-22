@@ -37,6 +37,29 @@ type Spartan = {
   clearanceToken: string;
   refreshToken: string;
 };
+type XboxUser = {
+  xuid: string;
+  gamertag: string;
+};
+
+export async function getGamertag(refreshToken: string): Promise<XboxUser> {
+  const oauth_tokens: MicrosoftEntraIdTokens =
+    await entraId.refreshAccessToken(refreshToken);
+
+  //call to get xbox user token
+  const userToken = await requestUserToken(oauth_tokens.accessToken);
+
+  //call to get XSTS Xbox token
+  const xstsToken = await requestXstsToken(
+    userToken.Token,
+    XstsRelayingParty.XboxAudience,
+  );
+
+  return {
+    xuid: xstsToken.DisplayClaims.xui[0].xid!,
+    gamertag: xstsToken.DisplayClaims.xui[0].gtg!,
+  };
+}
 
 export async function refreshSpartanToken(
   refreshToken: string,
@@ -71,7 +94,7 @@ export async function refreshSpartanToken(
     spartanToken: spartanToken,
     clearanceToken: clearanceToken.FlightConfigurationId,
     refreshToken: oauth_tokens.refreshToken!,
-    //xbl_authorization_header_value = xstsToken.authorization_header_value
+    // xbl_authorization_header_value = xstsToken.authorization_header_value,
   };
 }
 

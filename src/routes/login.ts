@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { lucia, entraId } from "../lucia";
 import prisma from "../prisma";
 import { authApp } from "../middleware";
-import { getAppearance } from "../authTools";
+import { getAppearance, getSpartanToken } from "../authTools";
 import {
   generateState,
   generateCodeVerifier,
@@ -13,9 +13,9 @@ import { generateId } from "lucia";
 import { parseJWT } from "oslo/jwt";
 import { jwtDecode } from "jwt-decode";
 import { entraIdTokenPayload } from "../interface";
-import { refreshSpartanToken } from "../auth";
+import { getGamertag, refreshSpartanToken } from "../auth";
 import { rateLimit } from "elysia-rate-limit";
-import { TooManyRequests } from "../lib/errors";
+import { TooManyRequests, Unknown } from "../lib/errors";
 import { cloudflareGenerator } from "../lib/rateLimit";
 import { server } from "..";
 
@@ -148,16 +148,23 @@ export const login = new Elysia()
               const tokens: MicrosoftEntraIdTokens =
                 await entraId.validateAuthorizationCode(code, codeVerifier);
               const user = await jwtDecode<entraIdTokenPayload>(tokens.idToken);
-              const xboxUser = await refreshSpartanToken(tokens.refreshToken!);
+              const xboxUser = await getGamertag(tokens.refreshToken!);
 
               if (!xboxUser) {
                 throw new Error("Xbox Authentication Error");
               }
+              const spartanUserId = process.env.OAUTH_USER;
+              if (!spartanUserId) {
+                throw new Unknown();
+              }
+              const haloTokens = await getSpartanToken(spartanUserId);
+              if (!haloTokens) {
+                throw new Error(`failed to fetch emblem data`);
+              }
 
               const headers: HeadersInit = {
-                "X-343-Authorization-Spartan":
-                  xboxUser.spartanToken.SpartanToken,
-                "343-Clearance": xboxUser.clearanceToken,
+                "X-343-Authorization-Spartan": haloTokens.spartanToken,
+                "343-Clearance": haloTokens.clearanceToken,
               };
               const appearance = await getAppearance(xboxUser.xuid, headers);
               appearance.emblemPath = appearance.emblemPath.startsWith("/")
