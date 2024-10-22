@@ -35,7 +35,8 @@ Start the server
   bun run dev
 ```
 
-To get login actions working you need to provide your own xbox spartan token. You can look at the code in [auth.ts](https://github.com/Unggoy1/unggoy-api/blob/main/src/auth.ts) and [authTools.ts](https://github.com/Unggoy1/unggoy-api/blob/main/src/authTools.ts) to see how i programatically got my tokens.
+To get login actions working you need to provide your own xbox spartan token. This project is unafilliated with Microsoft and I am not responsible if anything happens to your Microsoft account following the steps below
+You can look at the code in [auth.ts](https://github.com/Unggoy1/unggoy-api/blob/main/src/auth.ts) and [authTools.ts](https://github.com/Unggoy1/unggoy-api/blob/main/src/authTools.ts) to see how i programatically got my tokens.
 You will need to manually enter the following into the Oauth table in your development database:
 
 - userId
