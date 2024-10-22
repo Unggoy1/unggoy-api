@@ -35,11 +35,22 @@ Start the server
   bun run dev
 ```
 
--
+To get login actions working you need to provide your own xbox spartan token. You can look at the code in [auth.ts](https://github.com/Unggoy1/unggoy-api/blob/main/src/auth.ts) and [authTools.ts](https://github.com/Unggoy1/unggoy-api/blob/main/src/authTools.ts) to see how i programatically got my tokens.
+You will need to manually enter the following into the Oauth table in your development database:
+
+- userId
+- spartanToken
+- spartanTokenExpiresAt
+- refreshToken(microsoft account)
+- clearanceToken
+
+Also the userId needs to be added in your .env file as `OAUTH_USER="userId"`
 
 ## Environment Variables
 
 To run this project, you will need to add environment variables to your .env file. Check out the `dev.env` file for all the required variables
+
+OAUTH_USER is the user id from the database of your development user you manually inject into the database
 
 ## Running Tests
 
