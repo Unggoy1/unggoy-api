@@ -20,7 +20,6 @@ export async function getSpartanToken(userId: string) {
   if (oauth.spartanToken && oauth.spartanTokenExpiresAt < currentTime) {
     try {
       const tokens = await refreshSpartanToken(oauth.refreshToken);
-
       oauth = await prisma.oauth.update({
         where: {
           userId: userId,
