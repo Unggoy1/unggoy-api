@@ -49,7 +49,7 @@ Also the userId needs to be added in your .env file as `OAUTH_USER="userId"`
 
 ## Environment Variables
 
-To run this project, you will need to add environment variables to your .env file. Check out the `dev.env` file for all the required variables
+To run this project, you will need to add environment variables to your .env file. Check out the `example.env` file for all the required variables
 
 OAUTH_USER is the user id from the database of your development user you manually inject into the database
 
