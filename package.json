@@ -1,6 +1,6 @@
 {
   "name": "unggoy-api",
-  "version": "0.8.6",
+  "version": "0.9.0",
   "scripts": {
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
@@ -12,6 +12,7 @@
     "start": "NODE_ENV=production bun src/index.ts"
   },
   "dependencies": {
+    "@2toad/profanity": "^3.0.1",
     "@aws-sdk/client-s3": "^3.670.0",
     "@elysiajs/cors": "^1.1.1",
     "@elysiajs/cron": "^1.1.1",

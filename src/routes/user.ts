@@ -10,12 +10,18 @@ import {
 } from "../lib/errors";
 import { rateLimit } from "elysia-rate-limit";
 import { deleteFromS3, extractS3Key } from "../lib/imageTools";
+import { cloudflareGenerator } from "../lib/rateLimit";
+import { server } from "..";
 export const user = new Elysia()
   .use(
     rateLimit({
       scoping: "scoped",
       errorResponse: new TooManyRequests(),
       max: 5000,
+      generator: cloudflareGenerator,
+      injectServer: () => {
+        return server!;
+      },
     }),
   )
   .use(authApp)

@@ -3,6 +3,7 @@ import { authApp } from "../middleware";
 import prisma from "../prisma";
 import { rateLimit } from "elysia-rate-limit";
 import { createHash } from "crypto";
+import { Profanity, ProfanityOptions } from "@2toad/profanity";
 import {
   Duplicate,
   Forbidden,
@@ -28,6 +29,39 @@ function computeETag(updatedAt: Date): string {
   // Use updatedAt as the basis for the ETag
   return createHash("md5").update(updatedAt.toISOString()).digest("hex");
 }
+
+const profanity = new Profanity({
+  languages: ["de", "en", "es", "fr"],
+  wholeWord: true,
+  grawlix: "****",
+  grawlixChar: "*",
+});
+profanity.removeWords([
+  "butt",
+  "arse",
+  "bollok",
+  "fanny",
+  "poop",
+  "screwing",
+  "turd",
+  "sadist",
+  "rectum",
+  "balls",
+  "bloody",
+  "bollock",
+  "bollok",
+  "bugger",
+  "damn",
+  "bum",
+  "cox",
+  "crap",
+  "flange",
+  "homo",
+  "pawn",
+  "pecker",
+  "spunk",
+  "willy",
+]);
 
 export const playlists = new Elysia()
   .use(
@@ -452,8 +486,8 @@ export const playlists2 = new Elysia()
               : "Expected description to be greater than 10";
             throw new Validation(message);
           }
-          name = nameValidation.sanitized;
-          description = descValidation.sanitized;
+          name = profanity.censor(nameValidation.sanitized);
+          description = profanity.censor(descValidation.sanitized);
 
           // Check if user has reached playlist limit
           const playlistCount = await prisma.playlist.count({
@@ -551,6 +585,24 @@ export const playlists2 = new Elysia()
           if (!name && !description && isPrivate === undefined && !thumbnail) {
             throw new Validation();
           }
+
+          if (name !== undefined) {
+            const nameValidation = validateInput(name, 4);
+            if (!nameValidation.isValid) {
+              const message = "Expected name to be greater than 4";
+              throw new Validation(message);
+            }
+            name = profanity.censor(nameValidation.sanitized);
+          }
+          if (description !== undefined) {
+            const descValidation = validateInput(description, 10);
+            if (!descValidation.isValid) {
+              const message = "Expected description to be greater than 10";
+              throw new Validation(message);
+            }
+            description = profanity.censor(descValidation.sanitized);
+          }
+
           let playlist = await prisma.playlist.findUnique({
             where: {
               assetId: playlistId,
