@@ -1,6 +1,6 @@
 [phases.setup]
-# uses bun 1.1.29
-nixpkgsArchive = '9c69bc8cae2f3b38536a50801961e2e62da13595'
+# uses bun 1.2.4
+nixpkgsArchive = '0e157f036f574fb459a38827a31457737a03295a'
 
 [phases.build]
 cmds = [
