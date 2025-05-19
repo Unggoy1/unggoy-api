@@ -68,11 +68,12 @@ model Ugc {
   files           Json
   recommended     Boolean       @default(false)
   contributors    Contributor[] @relation("ContributorToUgc") 
-  author     Contributor? @relation("Author", references: [xuid], fields: [authorId] )
+  author          Contributor? @relation("Author", references: [xuid], fields: [authorId] )
   authorId        String
   tag             Tag[]
-  playlist        Playlist[]
-  deletedAt DateTime?
+  mapPairs        UgcPair[] @relation("MapAsset")
+  gamemodePairs   UgcPair[] @relation("GamemodeAsset")
+  deletedAt       DateTime?
 }
 
 model Contributor {
@@ -101,10 +102,25 @@ model Playlist {
   private     Boolean
   userId      String
   user        User    @relation("User", references: [id], fields: [userId], onDelete: Cascade)
-  ugc         Ugc[]
+  ugcPairs    UgcPair[]
   favoritedBy       User[]  @relation("Favorites")
 
   @@index([userId])
+}
+
+model UgcPair {
+  id              String   @id @default(uuid())
+  playlistId      String
+  mapAssetId      String?
+  gamemodeAssetId String?
+  createdAt       DateTime @default(now())
+  playlist        Playlist @relation(fields: [playlistId], references: [assetId], onDelete: Cascade)
+  map             Ugc?     @relation("MapAsset", fields: [mapAssetId], references: [assetId])
+  gamemode        Ugc?     @relation("GamemodeAsset", fields: [gamemodeAssetId], references: [assetId])
+
+  @@index([playlistId])
+  @@index([mapAssetId])
+  @@index([gamemodeAssetId])
 }
 
 model WaypointSync {
