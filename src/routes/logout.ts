@@ -20,7 +20,14 @@ export const logout = new Elysia()
   .use(authApp)
   .get(
     "/logout",
-    async ({ user, session, cookie, set, query: { redirectUrl } }) => {
+    async ({
+      user,
+      session,
+      cookie,
+      set,
+      query: { redirectUrl },
+      redirect,
+    }) => {
       if (!user || !session) {
         throw new Unauthorized();
       }
@@ -33,7 +40,6 @@ export const logout = new Elysia()
 
       //redirect back to login page
       set.headers["Cache-Control"] = "private, no-store, max-age=0";
-      set.redirect = redirectUrl;
-      return;
+      return redirect(redirectUrl);
     },
   );
