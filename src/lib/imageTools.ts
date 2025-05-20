@@ -86,13 +86,14 @@ export async function uploadToS3(
 ) {
   const params = {
     Bucket: bucketName,
-    Key: key, // The file name or path in the S3 bucket
+    Key: key,
     Body: buffer,
-    ContentType: "image/webp", // Since the image is now WebP
+    ContentType: "image/webp",
   };
 
   try {
-    const data = await b2.send(new PutObjectCommand(params));
+    const command = new PutObjectCommand(params);
+    const data = await b2.send(command);
     return data;
   } catch (error) {
     console.error("Error uploading to S3:", error);

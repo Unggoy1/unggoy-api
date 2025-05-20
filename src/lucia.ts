@@ -36,12 +36,12 @@ declare module "lucia" {
     xuid: string;
   }
 }
-const cliendId = process.env.AZURE_CLIENT_ID ?? "";
+const clientId = process.env.AZURE_CLIENT_ID ?? "";
 const clientSecret = process.env.AZURE_CLIENT_SECRET ?? "";
 const redirectURI = process.env.AZURE_REDIRECT_URI ?? "";
 export const entraId = new MicrosoftEntraId(
   "consumers",
-  cliendId,
+  clientId,
   clientSecret,
   redirectURI,
 );
