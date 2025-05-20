@@ -60,13 +60,7 @@ export const login = new Elysia()
             // });
             const state = generateState();
             const codeVerifier = generateCodeVerifier();
-            
-            console.log("Creating authorization URL with:", {
-              clientId: process.env.AZURE_CLIENT_ID ? "set" : "missing",
-              clientSecret: process.env.AZURE_CLIENT_SECRET ? "set" : "missing",
-              redirectURI: process.env.AZURE_REDIRECT_URI
-            });
-            
+
             const authorizationUrl = await entraId.createAuthorizationURL(
               state,
               codeVerifier,
@@ -78,8 +72,6 @@ export const login = new Elysia()
                 ],
               },
             );
-            
-            console.log("Authorization URL created:", authorizationUrl.toString());
 
             entra_oauth_state.set({
               value: state,
@@ -103,7 +95,7 @@ export const login = new Elysia()
               maxAge: 60 * 60,
             });
             set.headers["Cache-Control"] = "private, no-store, max-age=0";
-            
+
             return redirect(authorizationUrl.toString());
           },
           {
@@ -225,7 +217,7 @@ export const login = new Elysia()
                 // });
 
                 set.headers["Cache-Control"] = "private, no-store, max-age=0";
-                
+
                 return redirect(redirectUrl.toString());
               }
 
@@ -267,7 +259,7 @@ export const login = new Elysia()
               //TODO See what attributes should be used for spartan token cookie
               //TODO See how we can refresh this spartan token as long as our session is active
               set.headers["Cache-Control"] = "private, no-store, max-age=0";
-              
+
               return redirect(redirectUrl.toString());
             } catch (error) {
               console.error(error);
