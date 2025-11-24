@@ -14,7 +14,6 @@ import {
   Validation,
 } from "../lib/errors";
 import {
-  checkImageNsfw,
   deleteFromS3,
   extractS3Key,
   generateUniqueFilename,
@@ -586,10 +585,6 @@ export const playlists2 = new Elysia()
           // We'll handle ugcPairs separately after creating the playlist
           let fileName;
           if (thumbnail) {
-            const isImageNSFW = await checkImageNsfw(thumbnail);
-            if (isImageNSFW) {
-              throw new Validation();
-            }
             const webpImage = await resizeAndOptimizeFileToWebP(
               thumbnail,
               560,
@@ -724,10 +719,6 @@ export const playlists2 = new Elysia()
 
             let fileName;
             if (thumbnail) {
-              const isImageNSFW = await checkImageNsfw(thumbnail);
-              if (isImageNSFW) {
-                throw new Validation();
-              }
               const webpImage = await resizeAndOptimizeFileToWebP(
                 thumbnail,
                 560,
