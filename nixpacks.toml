@@ -13,4 +13,5 @@ cmds = [
 ]
 
 [start]
-cmd = 'bun run start'
+# --smol flag reduces memory footprint by using a smaller heap
+cmd = 'bun --smol run start'
