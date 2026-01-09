@@ -74,6 +74,10 @@ model Ugc {
   mapPairs        UgcPair[] @relation("MapAsset")
   gamemodePairs   UgcPair[] @relation("GamemodeAsset")
   deletedAt       DateTime?
+
+  @@index([assetKind])
+  @@index([recommended])
+  @@index([authorId])
 }
 
 model Contributor {
