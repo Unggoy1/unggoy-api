@@ -24,6 +24,10 @@ import {
 import { cloudflareGenerator } from "../lib/rateLimit";
 import { server } from "..";
 import { validateInput } from "../lib/textTools";
+import {
+  coverThumbnailsInclude,
+  withCoverThumbnails,
+} from "../lib/playlistTools";
 function computeETag(updatedAt: Date): string {
   // Use updatedAt as the basis for the ETag
   return createHash("md5").update(updatedAt.toISOString()).digest("hex");
@@ -410,7 +414,7 @@ export const playlists = new Elysia()
 
           const [data, totalCount] = await prisma.playlist.findManyAndCount({
             where: whereOptions,
-
+            include: coverThumbnailsInclude,
             orderBy: sortOptions,
             take: count,
             skip: offset,
@@ -418,7 +422,11 @@ export const playlists = new Elysia()
 
           // set.headers["Cache-Control"] =
           //   "public, max-age=300, stale-while-revalidate=600";
-          return { totalCount: totalCount, pageSize: count, assets: data };
+          return {
+            totalCount: totalCount,
+            pageSize: count,
+            assets: data.map(withCoverThumbnails),
+          };
         },
         {
           query: t.Partial(
@@ -484,14 +492,18 @@ export const playlists = new Elysia()
 
           const [data, totalCount] = await prisma.playlist.findManyAndCount({
             where: whereOptions,
-
+            include: coverThumbnailsInclude,
             orderBy: sortOptions,
             take: count,
             skip: offset,
           });
 
           set.headers["Cache-Control"] = "private, no-store, max-age=0";
-          return { totalCount: totalCount, pageSize: count, assets: data };
+          return {
+            totalCount: totalCount,
+            pageSize: count,
+            assets: data.map(withCoverThumbnails),
+          };
         },
         {
           query: t.Partial(

@@ -10,6 +10,10 @@ import {
 import { rateLimit } from "elysia-rate-limit";
 import { cloudflareGenerator } from "../lib/rateLimit";
 import { server } from "..";
+import {
+  coverThumbnailsInclude,
+  withCoverThumbnails,
+} from "../lib/playlistTools";
 
 export const favorites = new Elysia()
   .use(
@@ -184,12 +188,17 @@ export const favorites2 = new Elysia()
 
         const [data, totalCount] = await prisma.playlist.findManyAndCount({
           where: whereOptions,
+          include: coverThumbnailsInclude,
           orderBy: sortOptions,
           take: count,
           skip: offset,
         });
         set.headers["Cache-Control"] = "private, no-store, max-age=0";
-        return { totalCount: totalCount, pageSize: count, assets: data };
+        return {
+          totalCount: totalCount,
+          pageSize: count,
+          assets: data.map(withCoverThumbnails),
+        };
       },
       {
         query: t.Partial(
