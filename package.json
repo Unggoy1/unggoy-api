@@ -9,7 +9,8 @@
     "prepare": "bunx prisma generate",
     "dev": "bun run --watch src/index.ts",
     "build": "bun build src/index.ts",
-    "start": "NODE_ENV=production bun src/index.ts"
+    "start": "NODE_ENV=production bun src/index.ts",
+    "backfill:covers": "bun scripts/backfill-playlist-covers.ts"
   },
   "dependencies": {
     "@2toad/profanity": "^3.0.1",

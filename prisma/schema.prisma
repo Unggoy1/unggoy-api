@@ -103,6 +103,7 @@ model Playlist {
   assetKind       Int           @db.UnsignedTinyInt @default(5)
   description String
   thumbnailUrl  String @default("/placeholder.webp")
+  hasCustomThumbnail Boolean @default(false)
   private     Boolean
   userId      String
   user        User    @relation("User", references: [id], fields: [userId], onDelete: Cascade)

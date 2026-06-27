@@ -25,9 +25,10 @@ import { cloudflareGenerator } from "../lib/rateLimit";
 import { server } from "..";
 import { validateInput } from "../lib/textTools";
 import {
-  coverThumbnailsInclude,
-  withCoverThumbnails,
-} from "../lib/playlistTools";
+  PLAYLIST_PLACEHOLDER_URL,
+  scheduleCoverRegeneration,
+  scheduleCoverRegenerationOnMapAdd,
+} from "../lib/playlistCover";
 function computeETag(updatedAt: Date): string {
   // Use updatedAt as the basis for the ETag
   return createHash("md5").update(updatedAt.toISOString()).digest("hex");
@@ -414,7 +415,6 @@ export const playlists = new Elysia()
 
           const [data, totalCount] = await prisma.playlist.findManyAndCount({
             where: whereOptions,
-            include: coverThumbnailsInclude,
             orderBy: sortOptions,
             take: count,
             skip: offset,
@@ -422,11 +422,7 @@ export const playlists = new Elysia()
 
           // set.headers["Cache-Control"] =
           //   "public, max-age=300, stale-while-revalidate=600";
-          return {
-            totalCount: totalCount,
-            pageSize: count,
-            assets: data.map(withCoverThumbnails),
-          };
+          return { totalCount: totalCount, pageSize: count, assets: data };
         },
         {
           query: t.Partial(
@@ -492,18 +488,13 @@ export const playlists = new Elysia()
 
           const [data, totalCount] = await prisma.playlist.findManyAndCount({
             where: whereOptions,
-            include: coverThumbnailsInclude,
             orderBy: sortOptions,
             take: count,
             skip: offset,
           });
 
           set.headers["Cache-Control"] = "private, no-store, max-age=0";
-          return {
-            totalCount: totalCount,
-            pageSize: count,
-            assets: data.map(withCoverThumbnails),
-          };
+          return { totalCount: totalCount, pageSize: count, assets: data };
         },
         {
           query: t.Partial(
@@ -611,9 +602,12 @@ export const playlists2 = new Elysia()
               name: name,
               description: description,
               private: isPrivate,
+              // A user upload is the only "custom" cover; otherwise we start on
+              // the placeholder and let auto-generation fill it in from the maps.
               thumbnailUrl: fileName
                 ? `${process.env.IMAGE_DOMAIN}${fileName}`
-                : "/placeholder.webp",
+                : PLAYLIST_PLACEHOLDER_URL,
+              hasCustomThumbnail: !!fileName,
               userId: user.id,
             },
           });
@@ -632,6 +626,12 @@ export const playlists2 = new Elysia()
                   gamemodeAssetId: asset.assetKind === 6 ? assetId : null,
                 },
               });
+
+              // Generate a cover from the seeded map (no-op for a custom upload
+              // or a gamemode-only pair).
+              if (asset.assetKind === 2) {
+                scheduleCoverRegenerationOnMapAdd(playlist.assetId);
+              }
             }
           }
 
@@ -668,12 +668,18 @@ export const playlists2 = new Elysia()
           user,
           session,
           params: { playlistId },
-          body: { name, description, isPrivate, thumbnail },
+          body: { name, description, isPrivate, thumbnail, removeThumbnail },
         }) => {
           if (!user || !session) {
             throw new Unauthorized();
           }
-          if (!name && !description && isPrivate === undefined && !thumbnail) {
+          if (
+            !name &&
+            !description &&
+            isPrivate === undefined &&
+            !thumbnail &&
+            !removeThumbnail
+          ) {
             throw new Validation();
           }
 
@@ -723,14 +729,21 @@ export const playlists2 = new Elysia()
               description?: string;
               private?: boolean;
               thumbnailUrl?: string;
+              hasCustomThumbnail?: boolean;
             } = {
               name: name,
               description: description,
               private: isPrivate,
             };
 
+            // Track whether we need to rebuild the cover from maps after this
+            // update (i.e. the user cleared their custom cover).
+            let regenerateCover = false;
+
             let fileName;
             if (thumbnail) {
+              // Uploading a cover marks the playlist as custom and stops
+              // auto-generation from then on.
               const webpImage = await resizeAndOptimizeFileToWebP(
                 thumbnail,
                 560,
@@ -744,12 +757,27 @@ export const playlists2 = new Elysia()
                 playlist.thumbnailUrl,
               );
               updateData.thumbnailUrl = `${process.env.IMAGE_DOMAIN}${fileName}`;
+              updateData.hasCustomThumbnail = true;
+            } else if (removeThumbnail && playlist.hasCustomThumbnail) {
+              // Dropping the custom cover: delete the uploaded file and let
+              // auto-generation take back over from the playlist's maps.
+              const thumbnailKey = extractS3Key(playlist.thumbnailUrl);
+              if (thumbnailKey) {
+                await deleteFromS3(process.env.S3_BUCKET_NAME, thumbnailKey);
+              }
+              updateData.thumbnailUrl = PLAYLIST_PLACEHOLDER_URL;
+              updateData.hasCustomThumbnail = false;
+              regenerateCover = true;
             }
 
             playlist = await prisma.playlist.update({
               where: { assetId: playlistId },
               data: { ...updateData },
             });
+
+            if (regenerateCover) {
+              scheduleCoverRegeneration(playlistId);
+            }
 
             return playlist;
           } catch (error) {
@@ -778,6 +806,7 @@ export const playlists2 = new Elysia()
                 type: "image",
                 maxSize: "5m",
               }),
+              removeThumbnail: t.BooleanString(),
             }),
           ),
         },
@@ -861,6 +890,11 @@ export const playlists3 = new Elysia()
             },
           });
 
+          // Rebuild the cover when a map was added (and the mosaic isn't full).
+          if (asset.assetKind === 2) {
+            scheduleCoverRegenerationOnMapAdd(playlistId);
+          }
+
           return playlist;
         },
         {
@@ -924,6 +958,11 @@ export const playlists3 = new Elysia()
               updatedAt: new Date(),
             },
           });
+
+          // A removed map may have been in the cover, so rebuild it.
+          if (ugcPair.mapAssetId) {
+            scheduleCoverRegeneration(playlistId);
+          }
 
           return playlist;
         },
@@ -1266,6 +1305,11 @@ export const playlists3 = new Elysia()
             },
           });
 
+          // Rebuild the cover when a map was added (and the mosaic isn't full).
+          if (mapAssetId) {
+            scheduleCoverRegenerationOnMapAdd(playlistId);
+          }
+
           return ugcPair;
         },
         {
@@ -1400,6 +1444,13 @@ export const playlists3 = new Elysia()
             },
           });
 
+          // A map added here attaches to an existing (possibly early) pair, so
+          // it can fall within the first-4 even on a full playlist -> always
+          // rebuild rather than using the skip-if-full add path.
+          if (mapAssetId) {
+            scheduleCoverRegeneration(playlistId);
+          }
+
           return updatedPair;
         },
         {
@@ -1472,6 +1523,11 @@ export const playlists3 = new Elysia()
               updatedAt: new Date(),
             },
           });
+
+          // A removed map may have been in the cover, so rebuild it.
+          if (ugcPair.mapAssetId) {
+            scheduleCoverRegeneration(playlistId);
+          }
 
           return;
         },
