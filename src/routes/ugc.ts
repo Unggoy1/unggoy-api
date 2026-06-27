@@ -67,6 +67,7 @@ export const maps = new Elysia()
             searchTerm,
             gamertag,
             ownerOnly = false,
+            contributorOnly = false,
             recommendedOnly = false,
             hide343Assets = false,
           },
@@ -102,6 +103,20 @@ export const maps = new Elysia()
             if (ownerOnly) {
               whereOptions.author = {
                 is: {
+                  gamertag: gamertag,
+                },
+              };
+            } else if (contributorOnly) {
+              // Contributed-but-not-owned: in the contributor list yet not the
+              // author. The complement of ownerOnly.
+              whereOptions.contributors = {
+                ...whereOptions.contributors,
+                some: {
+                  gamertag: gamertag,
+                },
+              };
+              whereOptions.author = {
+                isNot: {
                   gamertag: gamertag,
                 },
               };
@@ -195,6 +210,9 @@ export const maps = new Elysia()
               ownerOnly: t.BooleanString({
                 default: false,
               }),
+              contributorOnly: t.BooleanString({
+                default: false,
+              }),
               recommendedOnly: t.BooleanString({
                 default: false,
               }),
@@ -205,7 +223,175 @@ export const maps = new Elysia()
           ),
         },
       );
-  });
+  })
+  .get(
+    "/creator/:gamertag",
+    async ({ params: { gamertag }, set }) => {
+      // Owned assets only: the creator is the asset's author, not merely a
+      // contributor. The soft-delete middleware excludes deleted assets, and
+      // MySQL's default collation makes the gamertag match case-insensitive
+      // (same behaviour as /ugc/browse?ownerOnly=true).
+      const ownedAssets = await prisma.ugc.findMany({
+        where: {
+          author: {
+            is: {
+              gamertag: gamertag,
+            },
+          },
+        },
+        select: {
+          assetKind: true,
+          playsAllTime: true,
+          favorites: true,
+          averageRating: true,
+          numberOfRatings: true,
+          publishedAt: true,
+          thumbnailUrl: true,
+        },
+      });
+
+      // Only public playlists are visible on a public creator profile, matching
+      // /playlist/browse which hides private playlists.
+      const playlistCount = await prisma.playlist.count({
+        where: {
+          private: false,
+          user: {
+            username: gamertag,
+          },
+        },
+      });
+
+      if (ownedAssets.length === 0 && playlistCount === 0) {
+        throw new NotFound();
+      }
+
+      // Identity: prefer the User record; fall back to the contributor entry
+      // from one of their owned assets (creators synced from Waypoint may never
+      // have logged in).
+      const userRecord = await prisma.user.findFirst({
+        where: {
+          username: gamertag,
+        },
+        select: {
+          username: true,
+          serviceTag: true,
+          emblemPath: true,
+          xuid: true,
+        },
+      });
+
+      let identity = userRecord
+        ? {
+            gamertag: userRecord.username,
+            serviceTag: userRecord.serviceTag,
+            emblemPath: userRecord.emblemPath,
+            xuid: userRecord.xuid,
+          }
+        : null;
+
+      if (!identity) {
+        const contributor = await prisma.contributor.findFirst({
+          where: {
+            gamertag: gamertag,
+          },
+          select: {
+            gamertag: true,
+            serviceTag: true,
+            emblemPath: true,
+            xuid: true,
+          },
+        });
+        if (contributor) {
+          identity = contributor;
+        }
+      }
+
+      if (!identity) {
+        throw new NotFound();
+      }
+
+      let ownedMaps = 0;
+      let ownedModes = 0;
+      let ownedPrefabs = 0;
+      let totalPlays = 0;
+      let totalBookmarks = 0;
+      let weightedRatingSum = 0;
+      let ratingCountSum = 0;
+      let ratedAssetCount = 0;
+      let firstPublishedAt: Date | null = null;
+      let lastPublishedAt: Date | null = null;
+      let featuredThumbnailUrl: string | null = null;
+      let featuredPlays = -1;
+
+      for (const asset of ownedAssets) {
+        if (asset.assetKind === assetKind.Map) {
+          ownedMaps++;
+          // Featured backdrop is the most-played owned map.
+          if (asset.playsAllTime > featuredPlays) {
+            featuredPlays = asset.playsAllTime;
+            featuredThumbnailUrl = asset.thumbnailUrl;
+          }
+        } else if (asset.assetKind === assetKind.Mode) {
+          ownedModes++;
+        } else if (asset.assetKind === assetKind.Prefab) {
+          ownedPrefabs++;
+        }
+
+        totalPlays += asset.playsAllTime;
+        totalBookmarks += asset.favorites;
+
+        if (asset.numberOfRatings > 0) {
+          weightedRatingSum += Number(asset.averageRating) * asset.numberOfRatings;
+          ratingCountSum += asset.numberOfRatings;
+          ratedAssetCount++;
+        }
+
+        if (!firstPublishedAt || asset.publishedAt < firstPublishedAt) {
+          firstPublishedAt = asset.publishedAt;
+        }
+        if (!lastPublishedAt || asset.publishedAt > lastPublishedAt) {
+          lastPublishedAt = asset.publishedAt;
+        }
+      }
+
+      const averageRating =
+        ratingCountSum > 0
+          ? Math.round((weightedRatingSum / ratingCountSum) * 100) / 100
+          : 0;
+
+      set.headers["Cache-Control"] =
+        "public, max-age=1800, stale-while-revalidate=60";
+
+      return {
+        gamertag: identity.gamertag,
+        serviceTag: identity.serviceTag,
+        emblemPath: identity.emblemPath,
+        xuid: identity.xuid,
+        stats: {
+          ownedMaps,
+          ownedModes,
+          ownedPrefabs,
+          playlists: playlistCount,
+          totalPlays,
+          totalBookmarks,
+          averageRating,
+          ratedAssetCount,
+          firstPublishedAt: firstPublishedAt
+            ? firstPublishedAt.toISOString()
+            : null,
+          lastPublishedAt: lastPublishedAt
+            ? lastPublishedAt.toISOString()
+            : null,
+        },
+        featuredThumbnailUrl,
+      };
+    },
+    {
+      params: t.Object({
+        gamertag: t.String({ minLength: 1 }),
+      }),
+    },
+  );
 
 export enum assetKind {
   Map = 2,
