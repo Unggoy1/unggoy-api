@@ -359,6 +359,34 @@ export const maps = new Elysia()
           ? Math.round((weightedRatingSum / ratingCountSum) * 100) / 100
           : 0;
 
+      // Contributed-but-not-owned counts per kind: the same set as
+      // /ugc/browse?contributorOnly=true. Counted in the DB since we only need
+      // totals, not the rows.
+      const contributedWhere = {
+        contributors: {
+          some: {
+            gamertag: gamertag,
+          },
+        },
+        author: {
+          isNot: {
+            gamertag: gamertag,
+          },
+        },
+      };
+      const [contributedMaps, contributedModes, contributedPrefabs] =
+        await Promise.all([
+          prisma.ugc.count({
+            where: { ...contributedWhere, assetKind: assetKind.Map },
+          }),
+          prisma.ugc.count({
+            where: { ...contributedWhere, assetKind: assetKind.Mode },
+          }),
+          prisma.ugc.count({
+            where: { ...contributedWhere, assetKind: assetKind.Prefab },
+          }),
+        ]);
+
       set.headers["Cache-Control"] =
         "public, max-age=1800, stale-while-revalidate=60";
 
@@ -371,6 +399,9 @@ export const maps = new Elysia()
           ownedMaps,
           ownedModes,
           ownedPrefabs,
+          contributedMaps,
+          contributedModes,
+          contributedPrefabs,
           playlists: playlistCount,
           totalPlays,
           totalBookmarks,
