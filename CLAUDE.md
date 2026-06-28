@@ -113,6 +113,9 @@ The API uses Elysia's plugin architecture with grouped routes:
 - `/user` - User profile endpoints
 - `/login`, `/logout` - Authentication endpoints
 - `/favorites` - Favorite management endpoints
+- `/tags/search` - Public tag autocomplete; ranks tags by asset-usage count, returns popular tags when `searchTerm` is empty
+
+Note: `GET /ugc/browse?tags=a,b,c` accepts a comma-separated tag list and returns only assets carrying ALL listed tags (AND); a single tag still works.
 
 ### Error Handling
 Custom error classes in `/src/lib/errors.ts`:

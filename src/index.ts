@@ -6,6 +6,8 @@ import { logout } from "./routes/logout";
 import { cors } from "@elysiajs/cors";
 import { playlists, playlists2, playlists3 } from "./routes/playlist";
 import { favorites, favorites2 } from "./routes/favorites";
+import { search } from "./routes/search";
+import { tags } from "./routes/tags";
 import { cron, Patterns } from "@elysiajs/cron";
 import { lucia } from "./lucia";
 import {
@@ -97,6 +99,8 @@ export const app = new Elysia()
   .use(playlists3)
   .use(favorites)
   .use(favorites2)
+  .use(search)
+  .use(tags)
   .listen(PORT);
 
 console.log(
