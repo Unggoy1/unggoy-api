@@ -71,6 +71,18 @@ describe("Ugc", () => {
       });
       expect(error).toBeNull();
       expect(data).toBeObject();
+      // "remake" is on both Kusini Bay and NYC Wasteland.
+      expect(data?.totalCount).toBe(2);
+    });
+
+    it("Can get Browse(with multiple tags, AND semantics)", async () => {
+      const { data, error } = await api.ugc.browse.get({
+        query: { tags: "classic,remake" },
+      });
+      expect(error).toBeNull();
+      // Only Kusini Bay carries BOTH "classic" and "remake".
+      expect(data?.totalCount).toBe(1);
+      expect(data?.assets[0]?.name).toBe("Kusini Bay");
     });
 
     it("Can get Browse(sorted)", async () => {
@@ -79,6 +91,42 @@ describe("Ugc", () => {
       });
       expect(error).toBeNull();
       expect(data).toBeObject();
+    });
+  });
+});
+
+describe("Tags", () => {
+  describe("GET /tags/search", () => {
+    it("Returns most popular tags when searchTerm is empty", async () => {
+      const { data, error } = await api.tags.search.get({ query: {} });
+      expect(error).toBeNull();
+      expect(data?.tags).toBeArray();
+      // "remake" is on two assets — the most-used tag in the seed set.
+      expect(data?.tags[0]).toEqual({ tag: "remake", count: 2 });
+    });
+
+    it("Filters tags by substring", async () => {
+      const { data, error } = await api.tags.search.get({
+        query: { searchTerm: "rema" },
+      });
+      expect(error).toBeNull();
+      expect(data?.tags).toEqual([{ tag: "remake", count: 2 }]);
+    });
+
+    it("Tag search is case-insensitive", async () => {
+      const { data, error } = await api.tags.search.get({
+        query: { searchTerm: "REMA" },
+      });
+      expect(error).toBeNull();
+      expect(data?.tags.map((t) => t.tag)).toContain("remake");
+    });
+
+    it("Respects the count cap", async () => {
+      const { data, error } = await api.tags.search.get({
+        query: { count: 3 },
+      });
+      expect(error).toBeNull();
+      expect(data?.tags.length).toBeLessThanOrEqual(3);
     });
   });
 });

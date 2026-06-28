@@ -84,13 +84,19 @@ export const maps = new Elysia()
             whereOptions.assetKind = assetKind;
           }
           if (tags) {
-            whereOptions.tag = {
-              some: {
-                name: {
-                  in: [tags],
-                },
-              },
-            };
+            // Comma-separated tags are ANDed: an asset must carry every listed
+            // tag. Each tag needs its own `some` relation filter — a single
+            // `some` with `in: [...]` would match assets having ANY of them.
+            // A single tag still works (a one-element list).
+            const tagList = tags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter((tag) => tag.length > 0);
+            if (tagList.length > 0) {
+              whereOptions.AND = tagList.map((name) => ({
+                tag: { some: { name } },
+              }));
+            }
           }
           if (hide343Assets) {
             whereOptions.contributors = {
