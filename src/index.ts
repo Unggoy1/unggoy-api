@@ -47,6 +47,8 @@ export const app = new Elysia()
     cors({
       origin: process.env.CORS_URL || "localhost:5173",
       allowedHeaders: ["Content-Type", "Authorization"],
+      // Lets the frontend read the playlist export's filename via fetch()
+      exposeHeaders: ["Content-Disposition"],
       methods: ["GET", "PUT", "POST", "DELETE"],
       credentials: true,
     }),
