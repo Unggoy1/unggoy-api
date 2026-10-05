@@ -29,6 +29,11 @@ import {
   scheduleCoverRegeneration,
   scheduleCoverRegenerationOnMapAdd,
 } from "../lib/playlistCover";
+import {
+  buildPlaylistExport,
+  exportContentDisposition,
+  getExportablePairs,
+} from "../lib/playlistExport";
 function computeETag(updatedAt: Date): string {
   // Use updatedAt as the basis for the ETag
   return createHash("md5").update(updatedAt.toISOString()).digest("hex");
@@ -296,7 +301,11 @@ export const playlists = new Elysia()
             totalCount: totalCount,
             pageSize: count,
             assets: assets,
-            playlist: playlist,
+            playlist: {
+              ...playlist,
+              // Lets the frontend disable the dedicated server export button
+              exportablePairCount: getExportablePairs(ugcPairs).length,
+            },
           };
         },
         {
@@ -1219,6 +1228,71 @@ export const playlists3 = new Elysia()
               ownerOnly: t.BooleanString(),
             }),
           ),
+        },
+      )
+      .get(
+        "/:playlistId/export",
+        async ({ user, session, set, params: { playlistId } }) => {
+          const playlist = await prisma.playlist.findUnique({
+            where: {
+              assetId: playlistId,
+            },
+          });
+
+          if (!playlist) {
+            throw new NotFound();
+          }
+
+          if (playlist.private) {
+            if (!user || !session) {
+              throw new Unauthorized();
+            }
+            if (playlist.userId !== user.id) {
+              throw new Forbidden();
+            }
+          }
+
+          const assetSelect = {
+            select: {
+              assetId: true,
+              versionId: true,
+              name: true,
+              deletedAt: true,
+            },
+          };
+          const ugcPairs = await prisma.ugcPair.findMany({
+            where: {
+              playlistId: playlistId,
+              mapAssetId: { not: null },
+              gamemodeAssetId: { not: null },
+            },
+            orderBy: { createdAt: "asc" },
+            select: {
+              map: assetSelect,
+              gamemode: assetSelect,
+            },
+          });
+
+          const pairs = getExportablePairs(ugcPairs);
+          if (pairs.length === 0) {
+            throw new Validation(
+              "Playlist has no map and mode pairs to export",
+            );
+          }
+
+          set.headers["Content-Type"] = "application/json; charset=utf-8";
+          set.headers["Content-Disposition"] = exportContentDisposition(
+            playlist.name,
+          );
+          set.headers["Cache-Control"] = "private, no-store, max-age=0";
+          return JSON.stringify(buildPlaylistExport(pairs), null, 2);
+        },
+        {
+          params: t.Object({
+            playlistId: t.String({
+              format: "uuid",
+            }),
+          }),
         },
       )
       .post(

@@ -96,6 +96,7 @@ bunx prisma studio
      - `GET /playlist/:playlistId/pairs` - Get all pairs in a playlist
      - `POST /playlist/:playlistId/pair` - Create a new pair (map and/or gamemode)
      - `DELETE /playlist/:playlistId/pair/:pairId` - Delete a specific pair
+   - `GET /playlist/:playlistId/export` downloads `{name}.playlist.json` for the community dedicated server (logic in `src/lib/playlistExport.ts`). Only complete map+mode pairs are exported (lone maps/modes, soft-deleted assets and duplicate pairs are skipped); 422 if none remain. Names are "Mode on Map" capped at 80 UTF-8 bytes, ids are ASCII slugs ≤ 24 bytes. `GET /playlist/:playlistId` returns `playlist.exportablePairCount` so the frontend can disable the button
 
 4. **Rate Limiting**:
    - Cloudflare IP detection support
